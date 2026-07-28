@@ -538,7 +538,7 @@ let draft = nuevoDraft();
 const nuevaFila = (b) => ({
   bloque: b.bloque, tarea: b.nombre, prioridad: b.prioridad, resultado: "", tiempo: "", ruta: "",
   primerClic: "", errores: "", bloqueo: "", ayuda: "", expectativa: "", interpreto: "", cita: "",
-  observacion: "", observados: [], _ref: b
+  observacion: "", observados: [], sondeoResp: [], _ref: b
 });
 
 /* Tarea añadida sobre la marcha por quien modera. No viene del guion:
@@ -711,8 +711,9 @@ function htmlPasoTarea(idx) {
   ${campo("Qué hizo · ruta seguida", `tareas.${idx}.ruta`, "textarea", { rows: 2, ph: "Dashboard → Tracker → filtro sector → detalle" })}
   ${campo("Cita textual", `tareas.${idx}.cita`, "textarea", { rows: 2, ph: "Palabras exactas de la persona" })}
   ${campo("Dónde se atascó", `tareas.${idx}.bloqueo`, "textarea", { rows: 2, ph: "Si no hubo bloqueo, déjalo vacío" })}
-  ${(r.sondeo || []).length ? `<div class="leer"><span class="lbl">Sondeo final · léelo al terminar</span>
-      ${r.sondeo.map((s) => `<p class="q">«${esc(s)}»</p>`).join("")}</div>` : ""}
+  ${(r.sondeo || []).length ? `<div class="leer"><span class="lbl">Sondeo final · léelo al terminar y anota la respuesta</span>
+      ${r.sondeo.map((s, j) => `<p class="q">«${esc(s)}»</p>
+        ${campo("Qué respondió" + (r.sondeo.length > 1 ? " (" + (j + 1) + ")" : ""), `tareas.${idx}.sondeoResp.${j}`, "textarea", { rows: 2, ph: "Lo que dijo la persona" })}`).join("")}</div>` : ""}
   <div class="masdet">
     <button class="toggle" data-act="mas-detalle" data-k="t${idx}">${abierto ? "− Ocultar" : "+ Más detalle"} (tiempo, primer clic, errores, expectativas)</button>
     ${abierto ? `<div style="margin-top:10px">
@@ -967,9 +968,14 @@ async function guardarSesion() {
 
     const tareas = draft.tareas.filter((t) => t.tarea).map((t) => {
       const marcados = ((t._ref && t._ref.observar) || []).filter((_, j) => t.observados && t.observados[j]);
+      const sondeo = ((t._ref && t._ref.sondeo) || []).map((q, j) => {
+        const a = (t.sondeoResp && t.sondeoResp[j]) || "";
+        return a.trim() ? `Sondeo «${q}»: ${a.trim()}` : "";
+      }).filter(Boolean).join("\n");
       const obs = [
         t.extra && t.consigna ? "Consigna: " + t.consigna : "",
         marcados.length ? "Observado: " + marcados.join(" · ") : "",
+        sondeo,
         t.observacion || ""
       ].filter(Boolean).join("\n");
       const o = {};
@@ -1592,7 +1598,7 @@ function cargarEnFormulario(recId) {
         resultado: val(t, F.tar.resultado), tiempo: val(t, F.tar.tiempo), ruta: val(t, F.tar.ruta),
         primerClic: val(t, F.tar.primerClic), errores: val(t, F.tar.errores), bloqueo: val(t, F.tar.bloqueo),
         ayuda: val(t, F.tar.ayuda), expectativa: val(t, F.tar.expectativa), interpreto: val(t, F.tar.interpreto),
-        cita: val(t, F.tar.cita), observacion: val(t, F.tar.observacion), observados: [], _ref: ref
+        cita: val(t, F.tar.cita), observacion: val(t, F.tar.observacion), observados: [], sondeoResp: [], _ref: ref
       };
     });
   }
