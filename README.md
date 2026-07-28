@@ -1,10 +1,17 @@
 # Bitácora de pruebas de usabilidad · EI Tracker
 
-**👉 Abre la herramienta aquí: https://bibianamorago.github.io/ei-tracker-pruebas-usabilidad/**
+Herramienta para moderar y registrar las sesiones de usabilidad de EI Tracker (ServiceNow) siguiendo el guion por rol (Reviewer, KLD, Consultant). Los datos se guardan en una base de Airtable compartida por todo el equipo.
 
-Herramienta para moderar y registrar las sesiones de usabilidad de EI Tracker (ServiceNow) siguiendo el guion de 30 minutos por rol (Reviewer, KLD, Consultant). Los datos se guardan en una base de Airtable compartida por todo el equipo.
+Hay **dos versiones**, según para quién:
 
-No hay que instalar nada: se abre en el navegador desde el enlace de arriba. Cada persona conecta con su propio token de Airtable la primera vez.
+| Versión | Enlace | Para quién | ¿Necesita token? |
+| --- | --- | --- | --- |
+| **Registro de sesiones** | https://bibianamorago.github.io/ei-tracker-pruebas-usabilidad/ | Equipo de investigación que modera y registra | Sí, el token personal de Airtable |
+| **Resultados (solo lectura)** | https://bibianamorago.github.io/ei-tracker-pruebas-usabilidad/resultados.html | Negocio y producto | No |
+
+No hay que instalar nada: se abren en el navegador desde el enlace.
+
+La versión de **resultados** muestra un resumen **agregado** (métricas, tareas con más fricción, temas de insight) y el guion completo. **No** incluye el texto literal de los hallazgos ni las citas de las personas participantes — eso vive solo en Airtable. Ver [Cómo publicar los resultados](#cómo-publicar-los-resultados-para-negocio-y-producto) más abajo.
 
 ## Cómo empezar (una vez por persona)
 
@@ -23,11 +30,11 @@ Si algún día tu token deja de funcionar (por ejemplo si lo revocas), la app te
 
 Este repositorio es **público**, así que conviene tener clara la frontera real.
 
-**Lo que es público:** el código de la herramienta, el ID de la base de Airtable y los nombres de las tablas y campos. Esa información, por sí sola, no da acceso a nada: la API de Airtable rechaza cualquier petición que no traiga un token válido con permiso concedido sobre la base.
+**Lo que es público:** el código de la herramienta, el ID de la base de Airtable y los nombres de las tablas y campos. Esa información, por sí sola, no da acceso a nada: la API de Airtable rechaza cualquier petición que no traiga un token válido con permiso concedido sobre la base. También es público el archivo `datos.json` (si existe): un **resumen agregado** — recuentos, porcentajes y temas de insight — que alimenta la versión de resultados.
 
-**Lo que no es público:** ninguna sesión, nota, cita ni hallazgo. Todo eso vive en Airtable.
+**Lo que nunca es público:** el texto literal de los hallazgos, las citas de las participantes, las notas por sesión y cualquier respuesta libre. Nada de eso entra en `datos.json`; vive solo en Airtable.
 
-> **Lo que protege las respuestas de las personas participantes son los permisos de la base de Airtable, no la visibilidad de este repositorio.** Quien administre la base controla quién entra; nadie más puede leer nada.
+> **Lo que protege las respuestas de las personas participantes son los permisos de la base de Airtable, no la visibilidad de este repositorio.** Quien administre la base controla quién entra. Lo único que sale de ahí a la web es el resumen agregado que el equipo decide publicar.
 
 **Tu token nunca se sube aquí.** Se guarda solo en el `localStorage` de tu navegador. No está en el código, no viaja a GitHub y no se comparte con el resto del equipo — cada persona usa el suyo.
 
@@ -48,10 +55,20 @@ No es una recomendación de estilo. Es lo que permite que, si algún día hay qu
 
 Un botón flotante **"Chuleta del facilitador"** resume las frases neutrales a usar/evitar y qué hacer si alguien se bloquea en una tarea.
 
-## Cómo compartir los resultados
+## Cómo publicar los resultados para negocio y producto
 
-- **Con el equipo de investigación**: manda el enlace de arriba. Quien lo abra con su propio token ve las sesiones, la síntesis y la matriz de evidencia de todo el mundo, en tiempo real.
-- **Con quien no tiene acceso a Airtable**: usa **Exportar CSV** desde la pestaña Síntesis para sacar los hallazgos. Repasa el CSV antes de enviarlo, por si alguna cita se coló sin anonimizar.
+La versión de resultados no se actualiza sola: lee un archivo `datos.json` que hay que regenerar cuando haya sesiones nuevas. El archivo lleva **solo agregados** (nunca el texto de hallazgos ni las citas), así que puede vivir en el repositorio público sin exponer a las participantes.
+
+Para actualizarlo:
+
+1. Abre la versión de **registro de sesiones** y conéctate con tu token.
+2. Ve a la pestaña **Síntesis** y pulsa **"Exportar snapshot para negocio"**. Se descarga `datos.json`.
+3. Sube ese `datos.json` a la raíz del repositorio (reemplazando el anterior). Puedes arrastrarlo en GitHub → *Add file* → *Upload files*, o pasárselo a quien administre el repo.
+4. En un minuto, la versión de resultados muestra los datos nuevos.
+
+Mientras no exista `datos.json`, la versión de resultados enseña el guion completo y avisa de que aún no hay datos publicados.
+
+**Con quien no tiene acceso a Airtable y quiere el detalle**: usa **Exportar CSV** desde la pestaña Síntesis para sacar los hallazgos completos. Repasa el CSV antes de enviarlo, por si alguna cita se coló sin anonimizar.
 
 ## Dónde viven los datos
 
@@ -69,11 +86,14 @@ Cualquier persona con acceso a la base puede ver y editar los datos desde Airtab
 ## Estructura del repositorio
 
 ```
-index.html   ← la herramienta, un único archivo
-README.md    ← este archivo
+index.html       ← versión de registro de sesiones (equipo, con token)
+resultados.html  ← versión de resultados para negocio y producto (sin token)
+guion.js         ← el guion y las tablas de referencia, compartidos por las dos páginas
+datos.json       ← snapshot agregado que alimenta resultados.html (se regenera; puede no existir aún)
+README.md        ← este archivo
 ```
 
-`index.html` es lo que sirve GitHub Pages. También funciona si lo descargas y lo abres con doble clic.
+El guion vive **solo** en `guion.js`, así que las dos páginas siempre muestran lo mismo: si cambias una tarea, cámbiala ahí una vez. `datos.json` es lo único que contiene datos de sesiones, y solo en forma agregada.
 
 ## Soporte
 
