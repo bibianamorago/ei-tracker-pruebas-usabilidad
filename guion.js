@@ -7,6 +7,9 @@
 
 const ROLES = ["Reviewer", "KLD", "Consultant"];
 const SEVERIDADES = ["Alta", "Media", "Baja"];
+// Clasificación de hallazgos (peer review): área responsable y esfuerzo estimado.
+const AREAS = ["Diseño", "QA", "Desarrollo", "Change management"];
+const ESFUERZOS = ["Bajo", "Alto"];
 const PERMISOS = [
   ["Ver estadísticas generales del banco", "Sí", "Sí, opcional", "Sí"],
   ["Ver estadísticas del sector", "Sí, mediante filtros", "Sí, vista principal", "Sí, mediante filtros"],

@@ -162,6 +162,10 @@ td.w { min-width:170px; }
 .bar { height:100%; border-radius:5px; }
 .bar-num { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
 @media (max-width:700px){ .bar-row { grid-template-columns:1fr; gap:3px; } }
+table.matriz td.mtz { vertical-align:top; min-width:130px; }
+table.matriz td.mtz.win { background:var(--baja-bg); }
+.mtz-item { font-size:11px; background:var(--surface); border:1px solid var(--line); border-radius:3px;
+  padding:3px 6px; margin-bottom:4px; line-height:1.3; }
 .sess { border:1px solid var(--line); border-radius:3px; background:var(--surface); margin-bottom:8px; }
 .sess-head { width:100%; display:flex; align-items:center; gap:10px; padding:10px 13px; background:none;
   border:none; text-align:left; font-family:inherit; font-size:13px; flex-wrap:wrap; }
@@ -259,7 +263,7 @@ const F = {
     incidencias:"fldqcI1y8rUZwPLcB", mSinAyuda:"fldzuRkDjVcTCExDo", mConAyuda:"fldtvKLJoNVWPwQKN",
     mNoCompl:"fld86K05YdTPH2DYZ", mErrores:"fldFfIPA8rWpCtrTW", mRetrocesos:"fldx0UuXYCikBdnTU",
     mFacilidad:"fldNTHONeXeKqNsqd", mConfianza:"fldT3CmdFzB9yYqKg",
-    cConfuso:"fldENhEMsxzvqh5q9", cSiguiente:"fldir5ZVXkllkWRxQ", cFaltante:"fldEsHk7X0kwbTG35",
+    cConfuso:"fldENhEMsxzvqh5q9", cSiguiente:"fldir5ZVXkllkWRxQ", cSupo:"fld2d2sZLln7B29NS", cFaltante:"fldEsHk7X0kwbTG35",
     cCambio:"flddug3EYjH0i4YkV", sObjetivo:"fldVNBtYWyyWe0TiN", sResultado:"fldLKPDDnY2pllKfu",
     sNecesidad:"fldWGH1ay8kNsBJPU", sDificultad:"fldB21Xi0OBCh2c34", sClaro:"fld3rGf9rJdq4UnKC",
     sRiesgo:"fldOlAhwblEQuSFuo", preguntas:"fldojUv2sEN1f6vkQ", creado:"fldmzvYlUAyJ2mqWh", respInicial:"fldgI6PoYqzATdo9m"
@@ -270,13 +274,14 @@ const F = {
     prioridad:"fldQHMkOewPgyNVfU", resultado:"fldXY6iWNLZJL7kz0", tiempo:"fldMett6y9emV5CJc",
     ruta:"fldkOXbrcERphRVwR", primerClic:"fldQ9RP58ec7Bt8jV", errores:"fldCXy7LdeEREAIzS",
     bloqueo:"fldt1QoH7vrdG4ssI", ayuda:"fldTGsYaINiRH8P3S", expectativa:"fld08400kE2K4paMM",
-    interpreto:"fld0iAWxFSs1Mc4h7", cita:"fld4MgKPdPGmHaw5i", observacion:"fldLjtHxXoZhuBc7E"
+    interpreto:"fld0iAWxFSs1Mc4h7", cita:"fld4MgKPdPGmHaw5i", observacion:"fldLjtHxXoZhuBc7E",
+    facilidad:"fldsCbbHWdaaSmW0j"
   },
   hal: {
     id:"fldCBbltZVWOGeiHU", sesion:"fldtW80AA08yDIInn", idSesion:"fld5kosfZSpoe2vx4",
     rol:"fldBgm57h6EhEq78i", tarea:"fldn5iqVblvd8BqF1", hallazgo:"fldnCnJCASih1zHPo",
     evidencia:"fldXMKgsbg80bAEUo", impacto:"fld7fIBA35LcsCXKI", severidad:"fldLCS9b1zFS243JL",
-    recomendacion:"fldD9iEEh7j9RgPWj"
+    recomendacion:"fldD9iEEh7j9RgPWj", area:"fldlOJg51wEKO3Kzw", esfuerzo:"fldrfP1ULoHHdDozT"
   },
   ins: {
     id:"fldfmnmGurlWeHzOE", sesion:"fld6Je2HLrjuU0hFF", idSesion:"flddvECVIZW323OcX",
@@ -457,6 +462,7 @@ const NOMBRE_CAMPO = {};
   registrar(S.mErrores, "Errores críticos"); registrar(S.mRetrocesos, "Retrocesos");
   registrar(S.mFacilidad, "Facilidad percibida"); registrar(S.mConfianza, "Confianza percibida");
   registrar(S.cConfuso, "Cierre · más confuso"); registrar(S.cSiguiente, "Cierre · no supo qué seguía");
+  registrar(S.cSupo, "Cierre · supo qué seguía");
   registrar(S.cFaltante, "Cierre · información faltante"); registrar(S.cCambio, "Cierre · un solo cambio");
   registrar(S.sObjetivo, "Objetivo probado"); registrar(S.sResultado, "Resultado general");
   registrar(S.sNecesidad, "Necesidad principal"); registrar(S.sDificultad, "Mayor dificultad");
@@ -472,11 +478,13 @@ const NOMBRE_CAMPO = {};
   registrar(A.bloqueo, "Punto de bloqueo"); registrar(A.ayuda, "Ayuda proporcionada");
   registrar(A.expectativa, "Expectativa de la persona"); registrar(A.interpreto, "Resultado que interpretó");
   registrar(A.cita, "Cita textual"); registrar(A.observacion, "Observación del facilitador");
+  registrar(A.facilidad, "Facilidad de la tarea");
 
   const H = F.hal;
   registrar(H.id, "ID"); registrar(H.sesion, "Sesión"); registrar(H.idSesion, "ID de sesión"); registrar(H.rol, "Rol");
   registrar(H.tarea, "Tarea relacionada"); registrar(H.hallazgo, "Hallazgo observado"); registrar(H.evidencia, "Evidencia o cita");
   registrar(H.impacto, "Impacto"); registrar(H.severidad, "Severidad"); registrar(H.recomendacion, "Recomendación inicial");
+  registrar(H.area, "Área"); registrar(H.esfuerzo, "Esfuerzo estimado");
 
   const N = F.ins;
   registrar(N.id, "ID"); registrar(N.sesion, "Sesión"); registrar(N.idSesion, "ID de sesión"); registrar(N.rol, "Rol");
@@ -527,7 +535,7 @@ const nuevoDraft = () => ({
   respInicial: "",
   tareas: [],
   metricas: { errores: "", retrocesos: "", facilidad: "", confianza: "" },
-  cierre: { confuso: "", siguiente: "", faltante: "", cambio: "" },
+  cierre: { confuso: "", siguiente: "", supo: "", faltante: "", cambio: "" },
   sintesis: { objetivo: "", resultado: "", necesidad: "", dificultad: "", claro: "", riesgo: "" },
   preguntas: "",
   hallazgos: [],
@@ -536,7 +544,7 @@ const nuevoDraft = () => ({
 let draft = nuevoDraft();
 
 const nuevaFila = (b) => ({
-  bloque: b.bloque, tarea: b.nombre, prioridad: b.prioridad, resultado: "", tiempo: "", ruta: "",
+  bloque: b.bloque, tarea: b.nombre, prioridad: b.prioridad, resultado: "", facilidad: "", tiempo: "", ruta: "",
   primerClic: "", errores: "", bloqueo: "", ayuda: "", expectativa: "", interpreto: "", cita: "",
   observacion: "", observados: [], sondeoResp: [], _ref: b
 });
@@ -548,7 +556,7 @@ const nuevaFilaExtra = () => ({
                  contexto: "", tarea: "", observar: [], sondeo: [], duracion: "5 min" }),
   extra: true, consigna: ""
 });
-const nuevoHallazgo = (n) => ({ codigo: "H-" + String(n).padStart(2, "0"), tarea: "", hallazgo: "", evidencia: "", impacto: "", severidad: "Media", recomendacion: "" });
+const nuevoHallazgo = (n) => ({ codigo: "H-" + String(n).padStart(2, "0"), tarea: "", hallazgo: "", evidencia: "", impacto: "", severidad: "Media", area: "", esfuerzo: "", recomendacion: "" });
 const nuevoInsight = (n) => ({ codigo: "I-" + String(n).padStart(2, "0"), necesidad: "", motivacion: "", barrera: "", consecuencia: "", confianza: "Media", tema: "" });
 
 /* Reconstruye la lista de tareas a partir del guion del rol activo.
@@ -708,6 +716,9 @@ function htmlPasoTarea(idx) {
   </div>
   <label class="f"><span class="l">¿Cómo terminó la tarea?</span></label>
   <div class="opts">${RESULTADOS.map((v) => `<button class="opt ${t.resultado === v ? "on " + resClase(v) : ""}" data-act="set-res" data-i="${idx}" data-v="${esc(v)}">${esc(v)}</button>`).join("")}</div>
+  <label class="f"><span class="l">¿Qué tan fácil le resultó? · pregúntaselo al terminar la tarea</span></label>
+  <div class="opts">${[1, 2, 3, 4, 5].map((n) => `<button class="opt num ${String(t.facilidad) === String(n) ? "on" : ""}" data-act="set-fac-tarea" data-i="${idx}" data-v="${n}">${n}</button>`).join("")}</div>
+  <p class="mini" style="margin:-4px 0 12px">1 = muy difícil · 5 = muy fácil</p>
   ${campo("Qué hizo · ruta seguida", `tareas.${idx}.ruta`, "textarea", { rows: 2, ph: "Dashboard → Tracker → filtro sector → detalle" })}
   ${campo("Cita textual", `tareas.${idx}.cita`, "textarea", { rows: 2, ph: "Palabras exactas de la persona" })}
   ${campo("Dónde se atascó", `tareas.${idx}.bloqueo`, "textarea", { rows: 2, ph: "Si no hubo bloqueo, déjalo vacío" })}
@@ -747,6 +758,13 @@ function htmlHallazgos() {
       </label>
     </div>
     ${campo("Evidencia o cita", `hallazgos.${i}.evidencia`, "textarea", { rows: 2 })}
+    <div class="grid2">
+      ${campo("Área responsable", `hallazgos.${i}.area`, "select", { options: ["", ...AREAS], hint: "Change management = textos y formas de comunicar" })}
+      <label class="f"><span class="l">Esfuerzo estimado del cambio</span>
+        <div class="opts" style="margin:0">${ESFUERZOS.map((s) => `<button class="opt ${h.esfuerzo === s ? "on" : ""}" data-act="set-esf" data-i="${i}" data-v="${s}">${s}</button>`).join("")}</div>
+        <span class="h">Con la severidad (impacto) forma la matriz de priorización</span>
+      </label>
+    </div>
     <div class="grid2">
       ${campo("Impacto", `hallazgos.${i}.impacto`, "textarea", { rows: 2, ph: "Qué consecuencia tiene para la persona y la operación" })}
       ${campo("Recomendación inicial", `hallazgos.${i}.recomendacion`, "textarea", { rows: 2 })}
@@ -811,8 +829,9 @@ function htmlCuerpoPaso(p) {
     <p class="mini" style="margin:-4px 0 12px">1 = muy difícil · 5 = muy fácil</p>
     <div class="leer"><span class="lbl">Pregunta 2</span><p class="q">«¿Qué fue lo más confuso o inesperado?»</p></div>
     ${campo("Respuesta", "cierre.confuso", "textarea", { rows: 2 })}
-    <div class="leer"><span class="lbl">Pregunta 3</span><p class="q">«¿En algún momento no supiste qué iba a ocurrir después?»</p></div>
-    ${campo("Respuesta", "cierre.siguiente", "textarea", { rows: 2 })}
+    <div class="leer"><span class="lbl">Pregunta 3</span><p class="q">«¿Supiste en todo momento qué iba a ocurrir después?»</p></div>
+    <div class="opts">${["Sí", "No"].map((v) => `<button class="opt ${draft.cierre.supo === v ? "on" : ""}" data-act="set-supo" data-v="${v}">${v}</button>`).join("")}</div>
+    ${campo("Detalle (cuándo se perdió, opcional)", "cierre.siguiente", "textarea", { rows: 2 })}
     <div class="leer"><span class="lbl">Pregunta 4</span><p class="q">«¿Qué información o acción te faltó?»</p></div>
     ${campo("Respuesta", "cierre.faltante", "textarea", { rows: 2 })}
     <div class="leer"><span class="lbl">Pregunta 5</span><p class="q">«Si pudieras cambiar una sola cosa, ¿cuál sería?»</p></div>
@@ -941,6 +960,7 @@ function fichaFields(idSesion) {
   o[F.ses.mErrores] = num(mm.errores); o[F.ses.mRetrocesos] = num(mm.retrocesos);
   o[F.ses.mFacilidad] = num(mm.facilidad); o[F.ses.mConfianza] = num(mm.confianza);
   o[F.ses.cConfuso] = c.confuso; o[F.ses.cSiguiente] = c.siguiente; o[F.ses.cFaltante] = c.faltante; o[F.ses.cCambio] = c.cambio;
+  o[F.ses.cSupo] = c.supo || undefined;
   o[F.ses.sObjetivo] = s.objetivo; o[F.ses.sResultado] = s.resultado; o[F.ses.sNecesidad] = s.necesidad;
   o[F.ses.sDificultad] = s.dificultad; o[F.ses.sClaro] = s.claro; o[F.ses.sRiesgo] = s.riesgo;
   o[F.ses.preguntas] = draft.preguntas;
@@ -987,6 +1007,7 @@ async function guardarSesion() {
       o[F.tar.errores] = t.errores; o[F.tar.bloqueo] = t.bloqueo; o[F.tar.ayuda] = t.ayuda;
       o[F.tar.expectativa] = t.expectativa; o[F.tar.interpreto] = t.interpreto;
       o[F.tar.cita] = t.cita; o[F.tar.observacion] = obs;
+      if (t.facilidad !== "" && t.facilidad != null) o[F.tar.facilidad] = Number(t.facilidad);
       return { fields: o };
     });
     const hallazgos = draft.hallazgos.filter((h) => h.hallazgo || h.evidencia).map((h) => {
@@ -995,6 +1016,8 @@ async function guardarSesion() {
       o[F.hal.idSesion] = idSesion; o[F.hal.rol] = f.rol; o[F.hal.tarea] = h.tarea;
       o[F.hal.hallazgo] = h.hallazgo; o[F.hal.evidencia] = h.evidencia; o[F.hal.impacto] = h.impacto;
       o[F.hal.severidad] = h.severidad; o[F.hal.recomendacion] = h.recomendacion;
+      if (h.area) o[F.hal.area] = h.area;
+      if (h.esfuerzo) o[F.hal.esfuerzo] = h.esfuerzo;
       return { fields: o };
     });
     const insights = draft.insights.filter((n) => n.necesidad || n.barrera).map((n) => {
@@ -1183,18 +1206,27 @@ function renderSintesis() {
   const altas = state.hallazgos.filter((h) => val(h, F.hal.severidad) === "Alta").length;
   const fac = state.sessions.map((s) => Number(val(s, F.ses.mFacilidad))).filter((n) => n > 0);
   const facProm = fac.length ? (fac.reduce((a, b) => a + b, 0) / fac.length).toFixed(1) : "—";
+  const facTareas = state.tareas.map((t) => Number(val(t, F.tar.facilidad))).filter((n) => n > 0);
+  const facTareaProm = facTareas.length ? (facTareas.reduce((a, b) => a + b, 0) / facTareas.length).toFixed(1) : "—";
 
   const mapa = {};
   state.tareas.forEach((t) => {
     const k = val(t, F.tar.tarea); if (!k) return;
-    mapa[k] = mapa[k] || { total: 0, no: 0, ayuda: 0, alta: 0 };
+    mapa[k] = mapa[k] || { total: 0, no: 0, ayuda: 0, alta: 0, facSum: 0, facN: 0 };
     mapa[k].total++;
     if (val(t, F.tar.resultado) === "No completada") mapa[k].no++;
     if (val(t, F.tar.resultado) === "Éxito con ayuda") mapa[k].ayuda++;
+    const fv = Number(val(t, F.tar.facilidad));
+    if (fv > 0) { mapa[k].facSum += fv; mapa[k].facN++; }
   });
   state.hallazgos.forEach((h) => { const k = val(h, F.hal.tarea); if (k && mapa[k] && val(h, F.hal.severidad) === "Alta") mapa[k].alta++; });
   const orden = Object.entries(mapa).sort((a, b) => (b[1].no + b[1].alta) - (a[1].no + a[1].alta) || b[1].total - a[1].total);
   const maxT = Math.max(1, ...orden.map(([, v]) => v.total));
+
+  // Clasificación por área y matriz severidad × esfuerzo (peer review).
+  const porArea = {}; AREAS.forEach((x) => porArea[x] = 0); porArea["Sin clasificar"] = 0;
+  state.hallazgos.forEach((h) => { const ar = val(h, F.hal.area); porArea[AREAS.includes(ar) ? ar : "Sin clasificar"]++; });
+  const celda = (sv, ef) => state.hallazgos.filter((h) => (val(h, F.hal.severidad) || "Media") === sv && (ESFUERZOS.includes(val(h, F.hal.esfuerzo)) ? val(h, F.hal.esfuerzo) : "Sin estimar") === ef);
 
   const hF = state.hallazgos.filter((h) => {
     if (filtros.rol !== "Todos" && val(h, F.hal.rol) !== filtros.rol) return false;
@@ -1213,7 +1245,8 @@ function renderSintesis() {
     <div class="stat"><span class="n">${noCompl}</span><span class="l">No completadas</span></div>
     <div class="stat" style="border-color:var(--alta-dot)"><span class="n" style="color:var(--alta-fg)">${altas}</span><span class="l">Hallazgos altos</span></div>
     <div class="stat"><span class="n">${state.insights.length}</span><span class="l">Insights</span></div>
-    <div class="stat"><span class="n">${facProm}</span><span class="l">Facilidad media</span></div>
+    <div class="stat"><span class="n">${facTareaProm}</span><span class="l">Facilidad tarea (1–5)</span></div>
+    <div class="stat"><span class="n">${facProm}</span><span class="l">Facilidad sesión (1–5)</span></div>
   </div>
   ${barraSnapshot}
   <div class="card">
@@ -1226,7 +1259,24 @@ function renderSintesis() {
     <div class="card-head"><h3>Tareas con más fricción</h3><span class="eyebrow">No completadas + hallazgos altos</span></div>
     ${orden.slice(0, 10).map(([k, v]) => `<div class="bar-row"><span>${esc(k)}</span>
       <div class="bar-track"><div class="bar" style="width:${v.total / maxT * 100}%;background:${v.no || v.alta ? "var(--alta-dot)" : v.ayuda ? "var(--media-dot)" : "var(--baja-dot)"}"></div></div>
-      <span class="bar-num">${v.total} obs.${v.no ? " · " + v.no + " sin completar" : ""}${v.alta ? " · " + v.alta + " alta" : ""}</span></div>`).join("") || `<p class="mini">Sin tareas registradas.</p>`}
+      <span class="bar-num">${v.total} obs.${v.no ? " · " + v.no + " sin completar" : ""}${v.alta ? " · " + v.alta + " alta" : ""}${v.facN ? " · facilidad " + (v.facSum / v.facN).toFixed(1) : ""}</span></div>`).join("") || `<p class="mini">Sin tareas registradas.</p>`}
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Fallos y fricciones por área</h3><span class="eyebrow">Change management = textos y comunicación</span></div>
+    ${state.hallazgos.length ? [...AREAS, "Sin clasificar"].map((ar) => `<div class="bar-row"><span>${esc(ar)}</span>
+      <div class="bar-track"><div class="bar" style="width:${porArea[ar] / Math.max(1, state.hallazgos.length) * 100}%;background:var(--accent)"></div></div>
+      <span class="bar-num">${porArea[ar]}</span></div>`).join("") : `<p class="mini">Sin hallazgos todavía.</p>`}
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Priorización · impacto × esfuerzo</h3><span class="eyebrow">Impacto = severidad · lo verde es prioritario</span></div>
+    ${state.hallazgos.length ? `<div class="tbl-wrap"><table class="matriz">
+      <thead><tr><th></th>${[...ESFUERZOS, "Sin estimar"].map((ef) => `<th>Esfuerzo ${esc(ef.toLowerCase())}</th>`).join("")}</tr></thead>
+      <tbody>${SEVERIDADES.map((sv) => `<tr><th><span class="badge ${esc(sv)}"><span class="dot"></span>${esc(sv)}</span></th>
+        ${[...ESFUERZOS, "Sin estimar"].map((ef) => { const cel = celda(sv, ef); const quickWin = sv === "Alta" && ef === "Bajo";
+          return `<td class="mtz ${quickWin ? "win" : ""}">${cel.length ? cel.map((h) => `<div class="mtz-item" title="${esc(val(h, F.hal.hallazgo))}">${esc(val(h, F.hal.idSesion))} · ${esc((val(h, F.hal.hallazgo) || "").slice(0, 40))}${(val(h, F.hal.hallazgo) || "").length > 40 ? "…" : ""}</div>`).join("") : `<span class="mini">—</span>`}</td>`; }).join("")}
+      </tr>`).join("")}</tbody></table></div>
+      <p class="mini" style="margin-top:8px"><b>Quick wins</b> (esquina verde): alta severidad y bajo esfuerzo — cámbialos primero. Marca el <b>esfuerzo</b> en cada hallazgo para colocarlo en la matriz.</p>`
+      : `<p class="mini">Sin hallazgos todavía.</p>`}
   </div>
   <div class="card">
     <div class="card-head"><h3>Hallazgos</h3><span class="eyebrow">${hF.length} de ${state.hallazgos.length}</span></div>
@@ -1237,13 +1287,15 @@ function renderSintesis() {
       <button class="btn sm" data-act="export-hallazgos">Exportar CSV</button>
     </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Sesión</th><th>Rol</th><th>Tarea</th><th>Sev.</th><th>Hallazgo</th><th>Recomendación</th></tr></thead>
+      <thead><tr><th>Sesión</th><th>Rol</th><th>Tarea</th><th>Sev.</th><th>Área</th><th>Esf.</th><th>Hallazgo</th><th>Recomendación</th></tr></thead>
       <tbody>${hF.map((h) => `<tr><td>${esc(val(h, F.hal.idSesion))}</td>
         <td><span class="pill">${esc(val(h, F.hal.rol))}</span></td>
         <td>${esc(val(h, F.hal.tarea))}</td>
         <td><span class="badge ${esc(val(h, F.hal.severidad))}"><span class="dot"></span>${esc(val(h, F.hal.severidad))}</span></td>
+        <td>${esc(val(h, F.hal.area)) || "—"}</td>
+        <td>${esc(val(h, F.hal.esfuerzo)) || "—"}</td>
         <td class="w">${esc(val(h, F.hal.hallazgo))}</td><td class="w">${esc(val(h, F.hal.recomendacion))}</td></tr>`).join("")
-        || `<tr><td colspan="6" class="mini">No hay hallazgos con estos filtros.</td></tr>`}</tbody></table></div>
+        || `<tr><td colspan="8" class="mini">No hay hallazgos con estos filtros.</td></tr>`}</tbody></table></div>
   </div>
   <div class="card">
     <div class="card-head"><h3>Resumen final del estudio</h3></div>
@@ -1253,6 +1305,9 @@ function renderSintesis() {
       <tr><th>Principales necesidades</th><td>${state.insights.slice(0, 5).map((n) => esc(val(n, F.ins.necesidad))).filter(Boolean).join(" · ") || "—"}</td></tr>
       <tr><th>Principales barreras</th><td>${state.insights.slice(0, 5).map((n) => esc(val(n, F.ins.barrera))).filter(Boolean).join(" · ") || "—"}</td></tr>
       <tr><th>Hallazgos altos por rol</th><td>${ROLES.map((r) => `${r}: ${state.hallazgos.filter((h) => val(h, F.hal.rol) === r && val(h, F.hal.severidad) === "Alta").length}`).join(" · ")}</td></tr>
+      <tr><th>Facilidad media por tarea</th><td>${facTareaProm} / 5</td></tr>
+      <tr><th>Supo qué seguía</th><td>Sí: ${state.sessions.filter((s) => val(s, F.ses.cSupo) === "Sí").length} · No: ${state.sessions.filter((s) => val(s, F.ses.cSupo) === "No").length}</td></tr>
+      <tr><th>Hallazgos por área</th><td>${[...AREAS, "Sin clasificar"].map((ar) => `${ar}: ${porArea[ar]}`).join(" · ")}</td></tr>
     </tbody></table></div>
   </div>`;
 
@@ -1397,20 +1452,34 @@ function construirSnapshot() {
   const noCompl = state.tareas.filter((t) => val(t, F.tar.resultado) === "No completada").length;
   const altas = state.hallazgos.filter((h) => val(h, F.hal.severidad) === "Alta").length;
   const fac = state.sessions.map((s) => Number(val(s, F.ses.mFacilidad))).filter((n) => n > 0);
+  const supo = { Sí: 0, No: 0 };
+  state.sessions.forEach((s) => { const v = val(s, F.ses.cSupo); if (supo[v] !== undefined) supo[v]++; });
 
   const mapa = {};
+  const facTodas = [];
   state.tareas.forEach((t) => {
     const k = val(t, F.tar.tarea); if (!k) return;
-    mapa[k] = mapa[k] || { total: 0, no: 0, ayuda: 0, alta: 0 };
+    mapa[k] = mapa[k] || { total: 0, no: 0, ayuda: 0, alta: 0, facSum: 0, facN: 0 };
     mapa[k].total++;
     if (val(t, F.tar.resultado) === "No completada") mapa[k].no++;
     if (val(t, F.tar.resultado) === "Éxito con ayuda") mapa[k].ayuda++;
+    const fv = Number(val(t, F.tar.facilidad));
+    if (fv > 0) { mapa[k].facSum += fv; mapa[k].facN++; facTodas.push(fv); }
   });
   state.hallazgos.forEach((h) => { const k = val(h, F.hal.tarea); if (k && mapa[k] && val(h, F.hal.severidad) === "Alta") mapa[k].alta++; });
 
   const hallazgos = {};
   ROLES.forEach((r) => hallazgos[r] = { Alta: 0, Media: 0, Baja: 0 });
   state.hallazgos.forEach((h) => { const r = val(h, F.hal.rol), sev = val(h, F.hal.severidad); if (hallazgos[r] && hallazgos[r][sev] !== undefined) hallazgos[r][sev]++; });
+
+  // Clasificación por área (peer review) y matriz de priorización severidad × esfuerzo.
+  const porArea = {}; AREAS.forEach((x) => porArea[x] = 0); porArea["Sin clasificar"] = 0;
+  const matriz = {}; SEVERIDADES.forEach((sv) => { matriz[sv] = { Bajo: 0, Alto: 0, "Sin estimar": 0 }; });
+  state.hallazgos.forEach((h) => {
+    const ar = val(h, F.hal.area); porArea[AREAS.includes(ar) ? ar : "Sin clasificar"]++;
+    const sv = val(h, F.hal.severidad) || "Media"; const ef = val(h, F.hal.esfuerzo);
+    if (matriz[sv]) matriz[sv][ESFUERZOS.includes(ef) ? ef : "Sin estimar"]++;
+  });
 
   const g = {};
   state.insights.forEach((n) => {
@@ -1428,10 +1497,12 @@ function construirSnapshot() {
       sesiones: state.sessions.length, porRol,
       tasaP0: p0.length ? Math.round(p0ok / p0.length * 100) : 0, p0ok, p0total: p0.length,
       noCompletadas: noCompl, hallazgosAltos: altas, insights: state.insights.length,
-      facilidadMedia: fac.length ? +(fac.reduce((a, b) => a + b, 0) / fac.length).toFixed(1) : null
+      facilidadMedia: fac.length ? +(fac.reduce((a, b) => a + b, 0) / fac.length).toFixed(1) : null,
+      facilidadTareaMedia: facTodas.length ? +(facTodas.reduce((a, b) => a + b, 0) / facTodas.length).toFixed(1) : null,
+      supoQueSeguia: supo
     },
-    friccion: Object.entries(mapa).map(([tarea, v]) => ({ tarea, total: v.total, no: v.no, ayuda: v.ayuda, alta: v.alta })),
-    hallazgos, temas
+    friccion: Object.entries(mapa).map(([tarea, v]) => ({ tarea, total: v.total, no: v.no, ayuda: v.ayuda, alta: v.alta, facilidad: v.facN ? +(v.facSum / v.facN).toFixed(1) : null })),
+    hallazgos, porArea, matriz, temas
   };
 }
 
@@ -1505,7 +1576,10 @@ document.addEventListener("click", async (e) => {
   else if (a === "crono-reset") { timers[b.dataset.id] = { ms: 0, desde: null }; renderPasos(); }
   else if (a === "mas-detalle") { ui.masDetalle[b.dataset.k] = !ui.masDetalle[b.dataset.k]; renderPasos(); }
   else if (a === "set-res") { draft.tareas[Number(b.dataset.i)].resultado = b.dataset.v; guardarBorrador(); renderPasos(); }
+  else if (a === "set-fac-tarea") { const t = draft.tareas[Number(b.dataset.i)]; t.facilidad = String(t.facilidad) === b.dataset.v ? "" : b.dataset.v; guardarBorrador(); renderPasos(); }
   else if (a === "set-cons") { draft.ficha.consentimiento = b.dataset.v; guardarBorrador(); renderPasos(); }
+  else if (a === "set-esf") { const h = draft.hallazgos[Number(b.dataset.i)]; h.esfuerzo = h.esfuerzo === b.dataset.v ? "" : b.dataset.v; guardarBorrador(); renderPasos(); }
+  else if (a === "set-supo") { draft.cierre.supo = draft.cierre.supo === b.dataset.v ? "" : b.dataset.v; guardarBorrador(); renderPasos(); }
   else if (a === "set-num") { draft.metricas[b.dataset.k] = b.dataset.v; guardarBorrador(); renderPasos(); }
   else if (a === "set-sev") { draft.hallazgos[Number(b.dataset.i)].severidad = b.dataset.v; guardarBorrador(); renderPasos(); }
   else if (a === "set-conf") { draft.insights[Number(b.dataset.i)].confianza = b.dataset.v; guardarBorrador(); renderPasos(); }
@@ -1566,8 +1640,8 @@ document.addEventListener("click", async (e) => {
     } catch (err) { toast("La descarga está bloqueada; copia el texto", true); }
   }
   else if (a === "export-hallazgos") {
-    mostrarCSV("Hallazgos EI Tracker", aCSV(["sesion", "rol", "tarea", "severidad", "hallazgo", "evidencia", "impacto", "recomendacion"],
-      state.hallazgos.map((h) => [val(h, F.hal.idSesion), val(h, F.hal.rol), val(h, F.hal.tarea), val(h, F.hal.severidad), val(h, F.hal.hallazgo), val(h, F.hal.evidencia), val(h, F.hal.impacto), val(h, F.hal.recomendacion)])));
+    mostrarCSV("Hallazgos EI Tracker", aCSV(["sesion", "rol", "tarea", "severidad", "area", "esfuerzo", "hallazgo", "evidencia", "impacto", "recomendacion"],
+      state.hallazgos.map((h) => [val(h, F.hal.idSesion), val(h, F.hal.rol), val(h, F.hal.tarea), val(h, F.hal.severidad), val(h, F.hal.area), val(h, F.hal.esfuerzo), val(h, F.hal.hallazgo), val(h, F.hal.evidencia), val(h, F.hal.impacto), val(h, F.hal.recomendacion)])));
   }
   else if (a === "export-snapshot") {
     if (!state.conectado) { toast("Conéctate con tu token antes de generar el snapshot", true); return; }
@@ -1607,18 +1681,19 @@ function cargarEnFormulario(recId) {
         resultado: val(t, F.tar.resultado), tiempo: val(t, F.tar.tiempo), ruta: val(t, F.tar.ruta),
         primerClic: val(t, F.tar.primerClic), errores: val(t, F.tar.errores), bloqueo: val(t, F.tar.bloqueo),
         ayuda: val(t, F.tar.ayuda), expectativa: val(t, F.tar.expectativa), interpreto: val(t, F.tar.interpreto),
-        cita: val(t, F.tar.cita), observacion: val(t, F.tar.observacion), observados: [], sondeoResp: [], _ref: ref
+        cita: val(t, F.tar.cita), observacion: val(t, F.tar.observacion), facilidad: val(t, F.tar.facilidad), observados: [], sondeoResp: [], _ref: ref
       };
     });
   }
   draft.metricas = { errores: val(s, F.ses.mErrores), retrocesos: val(s, F.ses.mRetrocesos), facilidad: val(s, F.ses.mFacilidad), confianza: val(s, F.ses.mConfianza) };
-  draft.cierre = { confuso: val(s, F.ses.cConfuso), siguiente: val(s, F.ses.cSiguiente), faltante: val(s, F.ses.cFaltante), cambio: val(s, F.ses.cCambio) };
+  draft.cierre = { confuso: val(s, F.ses.cConfuso), siguiente: val(s, F.ses.cSiguiente), supo: val(s, F.ses.cSupo), faltante: val(s, F.ses.cFaltante), cambio: val(s, F.ses.cCambio) };
   draft.sintesis = { objetivo: val(s, F.ses.sObjetivo), resultado: val(s, F.ses.sResultado), necesidad: val(s, F.ses.sNecesidad), dificultad: val(s, F.ses.sDificultad), claro: val(s, F.ses.sClaro), riesgo: val(s, F.ses.sRiesgo) };
   draft.preguntas = val(s, F.ses.preguntas);
   draft.hallazgos = hal.map((h, i) => ({
     codigo: (String(val(h, F.hal.id)).split("·").pop() || "").trim() || "H-" + String(i + 1).padStart(2, "0"),
     tarea: val(h, F.hal.tarea), hallazgo: val(h, F.hal.hallazgo), evidencia: val(h, F.hal.evidencia),
-    impacto: val(h, F.hal.impacto), severidad: val(h, F.hal.severidad) || "Media", recomendacion: val(h, F.hal.recomendacion)
+    impacto: val(h, F.hal.impacto), severidad: val(h, F.hal.severidad) || "Media", recomendacion: val(h, F.hal.recomendacion),
+    area: val(h, F.hal.area), esfuerzo: val(h, F.hal.esfuerzo)
   }));
   draft.insights = ins.map((n, i) => ({
     codigo: (String(val(n, F.ins.id)).split("·").pop() || "").trim() || "I-" + String(i + 1).padStart(2, "0"),

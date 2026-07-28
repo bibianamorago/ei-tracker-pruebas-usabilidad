@@ -216,6 +216,9 @@ ul.clean li { margin-bottom:3px; }
   padding:11px 14px; margin-bottom:16px; font-size:13px; color:var(--ink-soft); }
 .aviso b { color:var(--ink); }
 .mini-tabla td, .mini-tabla th { text-align:left; }
+table.matriz td.mtz { vertical-align:middle; text-align:center; min-width:110px; }
+table.matriz td.mtz.win { background:var(--baja-bg); }
+.mtz-count { font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px; }
 </style>
 </head>
 <body>
@@ -267,14 +270,18 @@ function renderSintesis() {
   const fr = (d.friccion || []).slice().sort((a, b) => (b.no + b.alta) - (a.no + a.alta) || b.total - a.total);
   const maxT = Math.max(1, ...fr.map((v) => v.total));
   const totHal = ROLES.reduce((s, r) => s + (d.hallazgos[r] ? d.hallazgos[r].Alta + d.hallazgos[r].Media + d.hallazgos[r].Baja : 0), 0);
+  const area = d.porArea || null;
+  const areaKeys = area ? [...AREAS, "Sin clasificar"] : [];
+  const maxA = area ? Math.max(1, ...areaKeys.map((k) => area[k] || 0)) : 1;
+  const efCols = [...ESFUERZOS, "Sin estimar"];
   el.innerHTML = `
   <div class="stats">
     <div class="stat"><span class="n">${t.sesiones}</span><span class="l">Sesiones</span></div>
     <div class="stat"><span class="n">${t.tasaP0}%</span><span class="l">Éxito P0 sin ayuda</span></div>
     <div class="stat"><span class="n">${t.noCompletadas}</span><span class="l">No completadas</span></div>
     <div class="stat" style="border-color:var(--alta-dot)"><span class="n" style="color:var(--alta-fg)">${t.hallazgosAltos}</span><span class="l">Hallazgos altos</span></div>
-    <div class="stat"><span class="n">${t.insights}</span><span class="l">Insights</span></div>
-    <div class="stat"><span class="n">${t.facilidadMedia ?? "—"}</span><span class="l">Facilidad media</span></div>
+    <div class="stat"><span class="n">${t.facilidadTareaMedia ?? "—"}</span><span class="l">Facilidad tarea (1–5)</span></div>
+    <div class="stat"><span class="n">${t.facilidadMedia ?? "—"}</span><span class="l">Facilidad sesión (1–5)</span></div>
   </div>
   <div class="card">
     <div class="card-head"><h3>Distribución por rol</h3><span class="eyebrow">Reviewer es el perfil principal</span></div>
@@ -286,8 +293,24 @@ function renderSintesis() {
     <div class="card-head"><h3>Tareas con más fricción</h3><span class="eyebrow">No completadas + hallazgos altos</span></div>
     ${fr.slice(0, 10).map((v) => `<div class="bar-row"><span>${esc(v.tarea)}</span>
       <div class="bar-track"><div class="bar" style="width:${v.total / maxT * 100}%;background:${v.no || v.alta ? "var(--alta-dot)" : v.ayuda ? "var(--media-dot)" : "var(--baja-dot)"}"></div></div>
-      <span class="bar-num">${v.total} obs.${v.no ? " · " + v.no + " sin completar" : ""}${v.alta ? " · " + v.alta + " alta" : ""}</span></div>`).join("") || `<p class="mini">Sin tareas registradas.</p>`}
+      <span class="bar-num">${v.total} obs.${v.no ? " · " + v.no + " sin completar" : ""}${v.alta ? " · " + v.alta + " alta" : ""}${v.facilidad ? " · facilidad " + v.facilidad : ""}</span></div>`).join("") || `<p class="mini">Sin tareas registradas.</p>`}
   </div>
+  ${area ? `<div class="card">
+    <div class="card-head"><h3>Fallos y fricciones por área</h3><span class="eyebrow">Change management = textos y comunicación</span></div>
+    ${areaKeys.map((k) => `<div class="bar-row"><span>${esc(k)}</span>
+      <div class="bar-track"><div class="bar" style="width:${(area[k] || 0) / maxA * 100}%;background:var(--accent)"></div></div>
+      <span class="bar-num">${area[k] || 0}</span></div>`).join("")}
+  </div>` : ""}
+  ${d.matriz ? `<div class="card">
+    <div class="card-head"><h3>Priorización · impacto × esfuerzo</h3><span class="eyebrow">Impacto = severidad · lo verde es prioritario</span></div>
+    <div class="tbl-wrap"><table class="matriz">
+      <thead><tr><th></th>${efCols.map((ef) => `<th>Esfuerzo ${esc(ef.toLowerCase())}</th>`).join("")}</tr></thead>
+      <tbody>${SEVERIDADES.map((sv) => `<tr><th><span class="badge ${esc(sv)}"><span class="dot"></span>${esc(sv)}</span></th>
+        ${efCols.map((ef) => { const n = ((d.matriz[sv] || {})[ef]) || 0; const win = sv === "Alta" && ef === "Bajo";
+          return `<td class="mtz ${win ? "win" : ""}">${n ? `<span class="mtz-count">${n}</span>` : `<span class="mini">—</span>`}</td>`; }).join("")}
+      </tr>`).join("")}</tbody></table></div>
+    <p class="mini" style="margin-top:8px"><b>Quick wins</b> (esquina verde): alta severidad y bajo esfuerzo. El detalle de cada hallazgo se consulta en Airtable.</p>
+  </div>` : ""}
   <div class="card">
     <div class="card-head"><h3>Hallazgos por rol y severidad</h3><span class="eyebrow">${totHal} en total</span></div>
     <div class="tbl-wrap"><table class="mini-tabla"><thead><tr><th>Rol</th><th>Alta</th><th>Media</th><th>Baja</th></tr></thead>
@@ -304,6 +327,7 @@ function renderSintesis() {
       <tr><th>Éxito tareas P0</th><td>${t.tasaP0}% sin ayuda (${t.p0ok} de ${t.p0total})</td></tr>
       <tr><th>Temas de insight</th><td>${(d.temas || []).length} · ${(d.temas || []).slice(0, 6).map((x) => esc(x.tema)).join(" · ") || "—"}</td></tr>
       <tr><th>Hallazgos altos por rol</th><td>${ROLES.map((r) => `${r}: ${(d.hallazgos[r] || {}).Alta || 0}`).join(" · ")}</td></tr>
+      ${t.supoQueSeguia ? `<tr><th>Supo qué seguía</th><td>Sí: ${t.supoQueSeguia.Sí || 0} · No: ${t.supoQueSeguia.No || 0}</td></tr>` : ""}
     </tbody></table></div>
   </div>`;
 }
