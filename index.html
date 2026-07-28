@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Bitácora de pruebas de usabilidad · EI Tracker</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  --paper:#EEEAE0; --surface:#F8F6F0; --ink:#202A26; --ink-soft:#5B6560;
+  --line:#D6D0C0; --accent:#2F5D57; --accent-soft:#E4EBE6;
+  --alta-bg:#F4E3E0; --alta-fg:#8C3B32; --alta-dot:#B5453D;
+  --media-bg:#F5EAD8; --media-fg:#8A5A22; --media-dot:#C98A3E;
+  --baja-bg:#E6ECE3; --baja-fg:#3E5A3E; --baja-dot:#6E8F63;
+  margin:0; padding:22px 18px 90px; background:var(--paper); color:var(--ink);
+  font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:13.5px; line-height:1.55;
+}
+.wrap { max-width:900px; margin:0 auto; }
+h1,h2,h3,h4 { font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace; margin:0; }
+.mast { border-bottom:2px solid var(--ink); padding-bottom:12px; margin-bottom:14px;
+  display:flex; justify-content:space-between; align-items:flex-end; gap:14px; flex-wrap:wrap; }
+.mast .eyebrow { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 4px; }
+.mast h1 { font-size:22px; font-weight:600; letter-spacing:-.01em; }
+.mast p.sub { font-size:12.5px; color:var(--ink-soft); max-width:360px; text-align:right; margin:0; }
+.note { display:flex; gap:9px; align-items:flex-start; font-size:12px; color:var(--ink-soft);
+  background:var(--accent-soft); border:1px solid var(--line); padding:9px 12px; border-radius:3px;
+  margin-bottom:14px; flex-wrap:wrap; }
+.note.warn { background:var(--media-bg); color:var(--media-fg); border-color:var(--media-dot); }
+.note.err { background:var(--alta-bg); color:var(--alta-fg); border-color:var(--alta-dot); }
+.note .grow { flex:1; min-width:220px; }
+.tabs { display:flex; gap:3px; border-bottom:1px solid var(--line); margin-bottom:16px; flex-wrap:wrap; }
+.tab { font-family:'IBM Plex Mono',monospace; font-size:12px; text-transform:uppercase;
+  letter-spacing:.06em; background:none; border:1px solid transparent; border-bottom:none;
+  padding:8px 12px; cursor:pointer; color:var(--ink-soft); border-radius:3px 3px 0 0; }
+.tab:hover { color:var(--ink); }
+.tab.active { background:var(--surface); border-color:var(--line); color:var(--ink); font-weight:600;
+  margin-bottom:-1px; padding-bottom:9px; }
+.card { background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:15px 17px; margin-bottom:13px; }
+.card-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  flex-wrap:wrap; margin-bottom:11px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+.card-head h3 { font-size:14.5px; font-weight:600; }
+.card-head .eyebrow { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:.07em; }
+.sect { font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase;
+  letter-spacing:.09em; color:var(--accent); margin:16px 0 9px; padding-bottom:4px;
+  border-bottom:1px solid var(--line); }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; }
+.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px 14px; }
+@media (max-width:720px){ .grid2,.grid3 { grid-template-columns:1fr; } }
+label.f { display:flex; flex-direction:column; gap:4px; margin-bottom:9px; }
+label.f > span.l { font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--ink-soft); }
+label.f > span.h { font-size:11px; color:var(--ink-soft); font-style:italic; }
+input,select,textarea { font-family:inherit; font-size:13px; color:var(--ink); background:#fff;
+  border:1px solid var(--line); border-radius:3px; padding:7px 9px; width:100%; }
+input:focus,select:focus,textarea:focus { outline:2px solid var(--accent-soft); border-color:var(--accent); }
+textarea { resize:vertical; min-height:54px; }
+button { font-family:'IBM Plex Mono',monospace; cursor:pointer; }
+.btn { font-size:12px; padding:7px 13px; border-radius:3px; border:1px solid var(--line);
+  background:#fff; color:var(--ink); display:inline-flex; align-items:center; gap:6px; }
+.btn:hover { border-color:var(--accent); }
+.btn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+.btn.primary:hover { background:#254a45; }
+.btn.danger { color:var(--alta-fg); border-color:var(--alta-bg); }
+.btn:disabled { opacity:.45; cursor:not-allowed; }
+.btn.sm { font-size:11px; padding:5px 9px; }
+.btn.big { font-size:13px; padding:10px 18px; }
+.row-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:13px; flex-wrap:wrap; align-items:center; }
+.pill { font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:2px 7px; border-radius:9px;
+  border:1px solid var(--line); background:#fff; color:var(--ink-soft); white-space:nowrap; }
+.pill.P0 { background:var(--alta-bg); color:var(--alta-fg); border-color:var(--alta-dot); }
+.pill.P1 { background:var(--media-bg); color:var(--media-fg); border-color:var(--media-dot); }
+.pill.P2 { background:var(--accent-soft); color:var(--accent); }
+.badge { display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px; padding:2px 8px; border-radius:9px; }
+.badge .dot { width:6px; height:6px; border-radius:50%; }
+.badge.Alta { background:var(--alta-bg); color:var(--alta-fg); } .badge.Alta .dot { background:var(--alta-dot); }
+.badge.Media { background:var(--media-bg); color:var(--media-fg); } .badge.Media .dot { background:var(--media-dot); }
+.badge.Baja { background:var(--baja-bg); color:var(--baja-fg); } .badge.Baja .dot { background:var(--baja-dot); }
+.res { font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.res.ok { color:var(--baja-fg); } .res.help { color:var(--media-fg); } .res.no { color:var(--alta-fg); }
+
+/* ---- pasos guiados ---- */
+.paso { border:1px solid var(--line); border-radius:4px; background:var(--surface); margin-bottom:9px; overflow:hidden; }
+.paso.open { border-color:var(--accent); box-shadow:0 1px 0 var(--accent-soft); }
+.paso-head { width:100%; display:flex; align-items:center; gap:11px; padding:12px 14px;
+  background:none; border:none; text-align:left; font-family:inherit; font-size:13.5px; flex-wrap:wrap; }
+.paso-head:hover { background:#fff; }
+.paso.open .paso-head { background:#fff; border-bottom:1px solid var(--line); }
+.paso-head .num { width:23px; height:23px; border-radius:50%; background:var(--accent-soft);
+  color:var(--accent); font-family:'IBM Plex Mono',monospace; font-size:11.5px; display:flex;
+  align-items:center; justify-content:center; flex:none; }
+.paso.done .paso-head .num { background:var(--baja-dot); color:#fff; }
+.paso-head .tit { font-family:'IBM Plex Mono',monospace; font-weight:600; }
+.paso-head .min { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+.paso-head .sp { flex:1; }
+.paso-head .crono { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);
+  background:var(--paper); padding:2px 8px; border-radius:9px; }
+.paso-head .crono.over { background:var(--media-bg); color:var(--media-fg); }
+.paso-head .crono.run { background:var(--accent); color:#fff; }
+.paso-body { padding:14px; }
+
+.leer { background:#fff; border:1px solid var(--accent); border-left-width:4px; border-radius:3px;
+  padding:12px 14px; margin-bottom:12px; }
+.leer .lbl { font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:5px; }
+.leer p { margin:0 0 8px; font-size:14.5px; line-height:1.6; }
+.leer p:last-child { margin:0; }
+.leer .q { font-style:italic; }
+.obs-list { background:var(--accent-soft); border-radius:3px; padding:11px 13px; margin-bottom:12px; }
+.obs-list .lbl { font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:7px; }
+.chk { display:flex; gap:8px; align-items:flex-start; margin-bottom:5px; font-size:12.5px; cursor:pointer; }
+.chk input { width:15px; height:15px; margin:2px 0 0; flex:none; accent-color:var(--accent); }
+.chk.on { color:var(--accent); font-weight:500; }
+.opts { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px; }
+.opt { font-size:12.5px; padding:9px 14px; border-radius:3px; border:1px solid var(--line);
+  background:#fff; color:var(--ink-soft); }
+.opt:hover { border-color:var(--accent); }
+.opt.on { border-color:var(--accent); background:var(--accent); color:#fff; font-weight:600; }
+.opt.on.ok { background:var(--baja-fg); border-color:var(--baja-fg); }
+.opt.on.help { background:var(--media-fg); border-color:var(--media-fg); }
+.opt.on.no { background:var(--alta-fg); border-color:var(--alta-fg); }
+.opt.num { min-width:44px; justify-content:center; text-align:center; }
+.masdet { border-top:1px dashed var(--line); margin-top:10px; padding-top:10px; }
+.toggle { background:none; border:none; color:var(--accent); font-size:11.5px; padding:0;
+  text-decoration:underline; font-family:'IBM Plex Mono',monospace; }
+.paso-next { display:flex; justify-content:space-between; align-items:center; gap:9px;
+  margin-top:13px; padding-top:11px; border-top:1px solid var(--line); flex-wrap:wrap; }
+
+/* ---- chuleta flotante ---- */
+.chuleta-btn { position:fixed; right:16px; bottom:16px; z-index:40; background:var(--accent);
+  color:#fff; border:none; border-radius:22px; padding:11px 17px; font-size:12.5px;
+  box-shadow:0 4px 16px rgba(0,0,0,.22); }
+.chuleta { position:fixed; right:16px; bottom:62px; z-index:41; width:310px; max-width:calc(100vw - 32px);
+  max-height:65vh; overflow-y:auto; background:#fff; border:1px solid var(--accent); border-radius:5px;
+  padding:14px 15px; box-shadow:0 8px 30px rgba(0,0,0,.24); }
+.chuleta h4 { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); margin:0 0 6px; }
+.chuleta h4:not(:first-child) { margin-top:13px; }
+.chuleta ul { margin:0; padding-left:16px; font-size:12.5px; } .chuleta li { margin-bottom:3px; }
+.chuleta .no li { color:var(--alta-fg); }
+
+table { width:100%; border-collapse:collapse; font-size:12.5px; }
+th,td { text-align:left; padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--ink-soft); background:var(--accent-soft); }
+td.w { min-width:170px; }
+.tbl-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:3px; background:var(--surface); }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(125px,1fr)); gap:9px; margin-bottom:14px; }
+.stat { background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:11px 13px; }
+.stat .n { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600; display:block; }
+.stat .l { font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em;
+  font-family:'IBM Plex Mono',monospace; }
+.bar-row { display:grid; grid-template-columns:1fr 140px 100px; gap:10px; align-items:center; margin-bottom:6px; font-size:12.5px; }
+.bar-track { height:9px; background:#E3DFD3; border-radius:5px; overflow:hidden; }
+.bar { height:100%; border-radius:5px; }
+.bar-num { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+@media (max-width:700px){ .bar-row { grid-template-columns:1fr; gap:3px; } }
+.sess { border:1px solid var(--line); border-radius:3px; background:var(--surface); margin-bottom:8px; }
+.sess-head { width:100%; display:flex; align-items:center; gap:10px; padding:10px 13px; background:none;
+  border:none; text-align:left; font-family:inherit; font-size:13px; flex-wrap:wrap; }
+.sess-head:hover { background:#fff; }
+.sess-head .id { font-family:'IBM Plex Mono',monospace; font-weight:600; }
+.sess-head .meta { font-size:11.5px; color:var(--ink-soft); }
+.sess-head .sp { flex:1; }
+.sess-body { padding:0 14px 14px; border-top:1px solid var(--line); }
+.obs { border-left:2px solid var(--line); padding:8px 0 8px 12px; margin-top:10px; }
+.obs p { margin:3px 0; font-size:12.5px; }
+.obs .quote { font-style:italic; color:var(--accent); border-left:2px solid var(--accent-soft); padding-left:8px; }
+.empty { text-align:center; padding:36px 20px; color:var(--ink-soft); background:var(--surface);
+  border:1px dashed var(--line); border-radius:4px; }
+.filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:11px; }
+.filters input,.filters select { width:auto; min-width:130px; }
+.filters .search { flex:1; min-width:200px; }
+.hide { display:none !important; }
+.spin { display:inline-block; width:12px; height:12px; border:2px solid var(--line);
+  border-top-color:var(--accent); border-radius:50%; animation:sp .7s linear infinite; }
+@keyframes sp { to { transform:rotate(360deg); } }
+.overlay { position:fixed; inset:0; background:rgba(32,42,38,.45); display:flex; align-items:center;
+  justify-content:center; z-index:50; padding:20px; }
+.modal { background:#fff; border-radius:5px; padding:20px 22px; max-width:360px; box-shadow:0 10px 40px rgba(0,0,0,.2); }
+.modal p { margin:0 0 16px; font-size:13px; }
+.toast { position:fixed; bottom:70px; left:50%; transform:translateX(-50%); background:var(--ink);
+  color:#fff; padding:10px 16px; border-radius:4px; font-size:12.5px; z-index:60;
+  font-family:'IBM Plex Mono',monospace; box-shadow:0 6px 20px rgba(0,0,0,.25); max-width:90vw; }
+.toast.err { background:var(--alta-dot); }
+.mini { font-size:11.5px; color:var(--ink-soft); }
+ul.clean { margin:5px 0 0; padding-left:17px; font-size:12.5px; }
+ul.clean li { margin-bottom:3px; }
+.hp { background:#fff; border:1px solid var(--line); border-radius:3px; padding:9px 11px; margin-bottom:7px; }
+.hp .n { font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; display:block; margin-bottom:3px; }
+.hp .p { font-size:12px; color:var(--ink-soft); }
+.item-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
+.item-head .ix { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent);
+  text-transform:uppercase; letter-spacing:.07em; }
+.blk { border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:3px;
+  background:#fff; padding:13px 15px; margin-bottom:11px; }
+.blk-head { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:9px; }
+.blk-head .name { font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600; }
+.blk-head .dur { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+.script { background:var(--accent-soft); border-radius:3px; padding:10px 12px; margin-bottom:11px; font-size:12.5px; }
+.script p { margin:0 0 6px; } .script p:last-child { margin:0; }
+.script .q { font-style:italic; }
+.script ul { margin:4px 0 0; padding-left:17px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mast">
+    <div>
+      <p class="eyebrow">Diseños EI Tracker · ServiceNow</p>
+      <h1>Bitácora de pruebas de usabilidad</h1>
+    </div>
+    <p class="sub">Modera la sesión paso a paso y guarda todo en Airtable.</p>
+  </div>
+
+  <div id="conn" class="note"><span class="spin"></span><span class="grow">Conectando con Airtable…</span></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="registrar">Registrar sesión</button>
+    <button class="tab" data-tab="sesiones">Sesiones <span id="cnt-sess"></span></button>
+    <button class="tab" data-tab="sintesis">Síntesis</button>
+    <button class="tab" data-tab="matriz">Matriz de evidencia</button>
+    <button class="tab" data-tab="guion">Guion completo</button>
+  </div>
+
+  <div id="v-registrar" class="view"></div>
+  <div id="v-sesiones" class="view hide"></div>
+  <div id="v-sintesis" class="view hide"></div>
+  <div id="v-matriz" class="view hide"></div>
+  <div id="v-guion" class="view hide"></div>
+</div>
+<div id="chuleta-host"></div>
+<button class="chuleta-btn" data-act="chuleta">Chuleta del facilitador</button>
+<div id="modal-host"></div>
+<script>
+/* ===================== Airtable: base, tablas y campos ===================== */
+const BASE = "appSKkm3hick5AcMc";
+const T = {
+  ses: "tblovZlZDmdkj5rjz",
+  tar: "tblV1NrVYcnojqBlf",
+  hal: "tblTwTCdgfTdoAImH",
+  ins: "tbllB9AKP0tXbKTS9"
+};
+const F = {
+  ses: {
+    id:"fldRTVzD6xfMTxAWm", fecha:"fldh2OBFWyTeSf3aH", hora:"fldNTUVGQqjQl5tSQ",
+    rol:"fldcXJSJ4W6pPz3Rx", participante:"fldwv0ieog8mSdHNU", experiencia:"fldMdtBlzTrIPHsTT",
+    facilitador:"fldMTja2eLlowsbAv", observador:"fldDaawWPIljYH1z9", modalidad:"fldGXMys2PUV0KtKr",
+    dispositivo:"fldwOw4fQdDvhZzJV", version:"fldcUVOlsgRubR2sJ", variante:"fldSJb3YkwpfSLwIM",
+    varianteTxt:"fldAO35cNWWmPFlQh", consentimiento:"flduISq02wRKYLIh3", grabacion:"fld30y3Yh9NxD1ydN",
+    incidencias:"fldqcI1y8rUZwPLcB", mSinAyuda:"fldzuRkDjVcTCExDo", mConAyuda:"fldtvKLJoNVWPwQKN",
+    mNoCompl:"fld86K05YdTPH2DYZ", mErrores:"fldFfIPA8rWpCtrTW", mRetrocesos:"fldx0UuXYCikBdnTU",
+    mFacilidad:"fldNTHONeXeKqNsqd", mConfianza:"fldT3CmdFzB9yYqKg",
+    cConfuso:"fldENhEMsxzvqh5q9", cSiguiente:"fldir5ZVXkllkWRxQ", cFaltante:"fldEsHk7X0kwbTG35",
+    cCambio:"flddug3EYjH0i4YkV", sObjetivo:"fldVNBtYWyyWe0TiN", sResultado:"fldLKPDDnY2pllKfu",
+    sNecesidad:"fldWGH1ay8kNsBJPU", sDificultad:"fldB21Xi0OBCh2c34", sClaro:"fld3rGf9rJdq4UnKC",
+    sRiesgo:"fldOlAhwblEQuSFuo", preguntas:"fldojUv2sEN1f6vkQ", creado:"fldmzvYlUAyJ2mqWh", respInicial:"fldgI6PoYqzATdo9m"
+  },
+  tar: {
+    registro:"fldy6VOOqaeJiLTqp", sesion:"fld9ZruYIj3kvAZBc", idSesion:"fldZ8pRrTE86oSJP4",
+    rol:"fldFUMPk5p40ewkr8", bloque:"fldpD9vEolmGGi25l", tarea:"fldW0ZUVOHiqhTdlz",
+    prioridad:"fldQHMkOewPgyNVfU", resultado:"fldXY6iWNLZJL7kz0", tiempo:"fldMett6y9emV5CJc",
+    ruta:"fldkOXbrcERphRVwR", primerClic:"fldQ9RP58ec7Bt8jV", errores:"fldCXy7LdeEREAIzS",
+    bloqueo:"fldt1QoH7vrdG4ssI", ayuda:"fldTGsYaINiRH8P3S", expectativa:"fld08400kE2K4paMM",
+    interpreto:"fld0iAWxFSs1Mc4h7", cita:"fld4MgKPdPGmHaw5i", observacion:"fldLjtHxXoZhuBc7E"
+  },
+  hal: {
+    id:"fldCBbltZVWOGeiHU", sesion:"fldtW80AA08yDIInn", idSesion:"fld5kosfZSpoe2vx4",
+    rol:"fldBgm57h6EhEq78i", tarea:"fldn5iqVblvd8BqF1", hallazgo:"fldnCnJCASih1zHPo",
+    evidencia:"fldXMKgsbg80bAEUo", impacto:"fld7fIBA35LcsCXKI", severidad:"fldLCS9b1zFS243JL",
+    recomendacion:"fldD9iEEh7j9RgPWj"
+  },
+  ins: {
+    id:"fldfmnmGurlWeHzOE", sesion:"fld6Je2HLrjuU0hFF", idSesion:"flddvECVIZW323OcX",
+    rol:"fldjwVMLDHQ1PGTsM", insight:"flddfp4QGtGxnvNr1", necesidad:"fldgnhGt2B8gkzkwX",
+    motivacion:"fld8uP6XVmmdIM8Ze", barrera:"flduthCx7codNkN0G", consecuencia:"fldfsWSgIhmxdvyIS",
+    hallazgos:"fldCEvXVA1ci8rjRg", confianza:"fldqlczCgbVif3vio", tema:"fldG7ww0nElWbMQCs"
+  }
+};
+
+const ROLES = ["Reviewer", "KLD", "Consultant"];
+const RESULTADOS = ["Éxito sin ayuda", "Éxito con ayuda", "No completada"];
+const SEVERIDADES = ["Alta", "Media", "Baja"];
+const CONFIANZAS = ["Alta", "Media", "Baja"];
+
+/* ===================== Contenido del guion ===================== */
+
+const PERMISOS = [
+  ["Ver estadísticas generales del banco", "Sí", "Sí, opcional", "Sí"],
+  ["Ver estadísticas del sector", "Sí, mediante filtros", "Sí, vista principal", "Sí, mediante filtros"],
+  ["Filtrar dashboard y Tracker EI", "Sí", "Sí", "Sí"],
+  ["Consultar Tracker EI", "Sí", "Sí", "Sí"],
+  ["Ver detalle e histórico", "Sí", "Sí", "Sí"],
+  ["Enviar manualmente una solicitud de actualización", "No; el proceso es automático", "No", "No"],
+  ["Ver EIs marcadas Pending update", "Sí, para seguimiento", "Sí, dentro de su ámbito", "No"],
+  ["Completar una EI Pending update", "Seguimiento", "Sí", "No"],
+  ["Actualizar una EI sin estado Pending update", "Sí", "Sí, dentro de su ámbito", "No"],
+  ["Editar una EI existente", "Sí", "Sí, dentro de su ámbito", "No"],
+  ["Crear una EI", "Sí", "No definido para este estudio", "No"],
+  ["Reportar una nueva EI", "No es su flujo principal", "No definido para este estudio", "Sí"],
+  ["Gestionar usuarios", "Sí", "No", "No"]
+];
+
+const PRIORIDADES = [
+  ["P0 — Crítica", "Responsabilidad central del rol. Un fallo bloquea trabajo operativo.", "Debe probarse como tarea principal."],
+  ["P1 — Frecuente", "Permite comprender, localizar o priorizar trabajo.", "Puede formar parte del inicio de una tarea P0."],
+  ["P2 — Ocasional", "Es necesaria, pero sucede con menor frecuencia o necesita una sesión específica.", "Probar como variante en otra sesión."],
+  ["Informativa", "Ayuda a comprender el estado del sistema sin modificar datos.", "Observar comprensión; no tratar como tarea aislada."],
+  ["Restringida", "No corresponde al rol.", "Verificar que no aparezca como acción disponible."]
+];
+
+const ESTRUCTURA = [
+  ["Apertura", "3 min", "Contexto, consentimiento y pregunta inicial."],
+  ["Orientación", "4 min", "Comprender la página de inicio y las prioridades."],
+  ["Navegación común", "5 min", "Filtrar, localizar y abrir una EI."],
+  ["Tarea crítica del rol", "13 min", "Completar un único happy path P0."],
+  ["Cierre", "5 min", "Evaluación y preguntas finales."]
+];
+
+const DATOS_PRUEBA = [
+  "Una EI en progreso y asignada al sector del Reviewer.",
+  "Una EI del sector marcada automáticamente como Pending update.",
+  "Una EI del sector con información desactualizada, sin estado Pending update.",
+  "Una EI completada con histórico y publicaciones.",
+  "Una combinación de filtros sin resultados.",
+  "Datos válidos para reportar o crear una nueva EI.",
+  "Una posible EI duplicada para comprobar prevención de errores."
+];
+
+const RIESGOS = [
+  "El Consultant puede reportar una nueva EI, pero no puede editar una EI existente. La pantalla de edición ubicada en su sección de Figma no debe interpretarse como un permiso del rol.",
+  "Debe definirse qué sucede después de que el Consultant reporta una EI: creación inmediata, revisión previa o asignación a un responsable.",
+  "Debe confirmarse si el Reviewer puede crear o autoreportar nuevas EIs. Esta tarea no se incluye en su alcance actual hasta recibir definición.",
+  "Debe confirmarse el permiso de exportación para Reviewer y Consultant.",
+  "Las etiquetas deben diferenciar claramente “Crear EI”, “Reportar nueva EI”, “Editar EI” y “Pending update”.",
+  "El diseño no debe mostrar a KLD controles para enviar o crear manualmente una solicitud de actualización.",
+  "Debe definirse y comunicar qué regla automática cambia una EI a Pending update, a quién se asigna y cuándo deja de estar pendiente."
+];
+
+const APERTURA = "Gracias por participar. Estamos evaluando la plataforma EI Tracker, no tus habilidades. Te pediré que realices algunas tareas y que pienses en voz alta: cuéntame qué buscas, qué esperas que ocurra y qué te resulta confuso. No hay respuestas correctas o incorrectas. Algunas partes pueden ser un prototipo y no responder como un sistema real. Si sucede, dime qué esperarías que ocurriera. Puedes detener la sesión en cualquier momento. ¿Podemos grabar la pantalla y el audio únicamente para analizar los resultados de esta prueba?";
+const PREGUNTA_INICIAL = "Cuando entras a una plataforma de seguimiento de EIs, ¿qué necesitas saber primero para decidir qué hacer?";
+const NEUTRALES_USAR = ["¿Qué estás pensando?", "¿Qué esperas que ocurra?", "¿Qué te hace elegir esa opción?", "¿Qué necesitarías para continuar?", "¿Dónde buscarías esa información?"];
+const NEUTRALES_EVITAR = ["¿Viste el botón…?", "¿No deberías usar el filtro…?", "¿Te parece claro?", "Nombrar una acción o control que la persona aún no ha encontrado."];
+const TIEMPO_REGLA = ["Registrar el punto exacto de bloqueo.", "Preguntar: «¿Qué necesitarías para continuar?».", "Marcar la tarea como no completada o completada con ayuda.", "Pasar al cierre; no acelerar el resto del flujo."];
+const CIERRE_PREGUNTAS = [
+  "En una escala de 1 a 5, ¿qué tan fácil fue completar la tarea principal?",
+  "¿Qué fue lo más confuso o inesperado?",
+  "¿En algún momento no supiste qué iba a ocurrir después?",
+  "¿Qué información o acción te faltó?",
+  "Si pudieras cambiar una sola cosa, ¿cuál sería?"
+];
+const DESPEDIDA = "Gracias. Tus comentarios nos ayudarán a mejorar la plataforma antes de su implementación. ¿Hay algo más que quieras añadir?";
+const SEVERIDAD_CRITERIO = [
+  ["Alta", "Impide completar una tarea P0, provoca una modificación incorrecta o pone en riesgo la integridad de los datos."],
+  ["Media", "Ralentiza la tarea, genera dudas importantes o requiere ayuda, pero existe recuperación."],
+  ["Baja", "Produce una duda menor, una preferencia o una mejora de comprensión sin bloquear la tarea."]
+];
+
+const FIGMA = [
+  ["Happy path KLD", "https://www.figma.com/design/2WDiu2LC0BnjjhoMPiwAiR/Impact-Evaluation?node-id=1090-11131"],
+  ["Happy path Reviewer", "https://www.figma.com/design/2WDiu2LC0BnjjhoMPiwAiR/Impact-Evaluation?node-id=1090-14835"],
+  ["Happy path Consultant", "https://www.figma.com/design/2WDiu2LC0BnjjhoMPiwAiR/Impact-Evaluation?node-id=1090-16719"]
+];
+/* ===================== Tareas y guion por rol ===================== */
+const GUION = {
+  Reviewer: {
+    principal: true,
+    objetivo: "Mantener actualizada la información de las Evaluaciones de Impacto de su sector, atender las EIs que el sistema marca como Pending update y detectar por iniciativa propia cuándo una EI necesita cambios.",
+    tareas: [
+      ["P0","Revisar cómo avanzan las EIs de su sector","Identifica volumen, estados, pendientes y evaluaciones que requieren atención."],
+      ["P0","Actualizar una EI marcada Pending update","Identifica la EI pendiente, actualiza la información necesaria y completa la actualización."],
+      ["P0","Realizar una actualización autónoma","Encuentra una EI de su sector, edita la información desactualizada y guarda los cambios con trazabilidad."],
+      ["P1","Encontrar una EI de su sector","Usa filtros, búsqueda, ordenamiento o la tabla para localizarla."],
+      ["P1","Revisar detalle e histórico","Comprende el estado actual, última actualización, datos existentes y cambios previos antes de editar."],
+      ["P1","Ver estadísticas generales del banco","Cambia a la vista general cuando necesita comparar su sector con el contexto global."],
+      ["P1","Aplicar y limpiar filtros","Ajusta el alcance de la información sin perder el contexto seleccionado."],
+      ["Informativa","Interpretar estados y fechas límite","Distingue qué está pendiente, completado o vencido y qué requiere acción."],
+      ["Restringida","Editar EIs fuera de su ámbito","La acción no está disponible o se explica la restricción sin exponer controles inválidos."],
+      ["Restringida","Gestionar usuarios","La acción no está disponible."]
+    ],
+    happyPaths: [
+      ["Actualización requerida automáticamente","Dashboard del sector → EI con estado Pending update → detalle de EI → editar información → guardar actualización → confirmación → EI deja de estar pendiente."],
+      ["Actualización autónoma","Dashboard del sector o Tracker EI → localizar EI → revisar detalle e histórico → editar EI → guardar → confirmación → histórico actualizado."],
+      ["Consulta general opcional","Dashboard del sector → vista general → aplicar filtros → comparar información → volver al contexto del sector."]
+    ],
+    orientacion: {
+      nombre:"Orientación — Reviewer", duracion:"4 min", prioridad:"P0",
+      contexto:"Acabas de entrar a EI Tracker y quieres saber cómo van las Evaluaciones de Impacto de tu sector.",
+      tarea:"Revisa la pantalla y cuéntame qué requiere tu atención y cuál sería tu siguiente acción.",
+      observar:["Si reconoce que la vista corresponde a su sector.","Si distingue EIs completadas, en progreso, identificadas y actualizaciones pendientes.","Si identifica EIs en estado Pending update que debe atender.","Si encuentra la opción para consultar estadísticas generales del banco."],
+      sondeo:[]
+    },
+    navegacion: {
+      nombre:"Navegación común — Reviewer", duracion:"5 min", prioridad:"P1",
+      contexto:"Necesitas revisar una EI específica de tu sector porque su información puede haber cambiado.",
+      tarea:"Encuentra la EI, abre su detalle y averigua su estado, última actualización y cambios anteriores.",
+      observar:["Uso de filtros, búsqueda y tabla.","Comprensión de filtros activos.","Capacidad de distinguir detalle, histórico y acciones disponibles.","Conservación del contexto al volver."],
+      sondeo:[]
+    },
+    criticas: {
+      A: {
+        nombre:"Tarea crítica A — EI marcada Pending update", duracion:"13 min", prioridad:"P0",
+        contexto:"El sistema ha marcado una EI de tu sector como Pending update.",
+        tarea:"Encuentra la EI pendiente, revisa su información, actualízala y completa el proceso.",
+        observar:["Descubrimiento de la EI marcada Pending update.","Comprensión de por qué requiere atención y de su fecha límite, si existe.","Diferenciación entre información editable y solo lectura.","Validaciones y conservación de datos.","Comprensión de la confirmación final.","Si entiende que la EI ya no debe aparecer como pendiente y que KLD podrá ver el estado actualizado."],
+        sondeo:["¿Cómo comprobarías que la actualización quedó guardada y que la EI ya no está pendiente?"]
+      },
+      B: {
+        nombre:"Tarea crítica B — actualización autónoma", duracion:"13 min", prioridad:"P0",
+        contexto:"Has recibido información nueva sobre una EI de tu sector. La EI no está marcada como Pending update.",
+        tarea:"Localiza la EI, actualiza su información y verifica que el cambio quedó registrado.",
+        observar:["Si entiende que puede iniciar una actualización aunque la EI no esté marcada como pendiente.","Descubrimiento de la acción de editar.","Claridad de campos, estados y guardado.","Prevención de pérdida de cambios.","Confirmación e histórico."],
+        sondeo:["¿Qué te confirma que el cambio fue guardado correctamente?"]
+      },
+      C: {
+        nombre:"Tarea crítica C — comparación sector/global + actualización autónoma", duracion:"13 min", prioridad:"P0",
+        contexto:"Antes de actualizar una EI de tu sector quieres comparar cómo va tu sector respecto al conjunto del banco. La EI no está marcada como Pending update.",
+        tarea:"Cambia a la vista general, aplica los filtros que necesites para comparar, vuelve al contexto de tu sector, localiza la EI y actualiza su información.",
+        observar:["Si encuentra la vista general y entiende que sigue siendo consulta.","Uso y limpieza de filtros sin perder el contexto del sector.","Si sabe volver a su ámbito después de comparar.","Descubrimiento de la acción de editar sin estado Pending update.","Confirmación e histórico."],
+        sondeo:["¿Qué te confirma que volviste al contexto de tu sector?","¿Qué te confirma que el cambio fue guardado correctamente?"]
+      }
+    },
+    variantes: {
+      A:"Sesión A — EI marcada Pending update",
+      B:"Sesión B — Actualización autónoma",
+      C:"Sesión C — Comparación sector/global + actualización autónoma"
+    }
+  },
+
+  KLD: {
+    objetivo: "Supervisar las Evaluaciones de Impacto de todo el banco, monitorear las actualizaciones generadas automáticamente y mantener los registros y usuarios del sistema.",
+    tareas: [
+      ["P0","Revisar las estadísticas generales del banco","Comprende el estado global de las EIs y detecta áreas que requieren seguimiento."],
+      ["P0","Monitorear actualizaciones automáticas","Distingue EIs pendientes, completadas y vencidas y abre la evaluación relacionada."],
+      ["P0","Editar una EI existente","Modifica información válida y confirma que el cambio quedó guardado y registrado."],
+      ["P0","Crear una nueva EI","Registra una EI con los datos mínimos y evita duplicados."],
+      ["P1","Filtrar estadísticas y Tracker EI","Reduce el alcance por sector, división, país, estado, año u otros filtros disponibles."],
+      ["P1","Encontrar una EI","Usa el Tracker, búsqueda, filtros y ordenamiento para localizarla."],
+      ["P1","Revisar detalle e histórico","Comprende estado, responsable, última actualización, fuente y cambios previos."],
+      ["P2","Gestionar usuarios y roles","Crea o modifica usuarios y confirma sus permisos."],
+      ["Informativa","Interpretar métricas, gráficos y estados","Utiliza la información para decidir dónde intervenir."]
+    ],
+    happyPaths: [
+      ["Monitorear actualizaciones automáticas","Dashboard global → revisar indicadores de actualización → abrir listado de actualizaciones → distinguir pendientes y completadas → abrir la EI relacionada → revisar su estado."],
+      ["Editar una EI","Tracker EI → localizar EI → detalle → editar → validar → guardar → confirmación → histórico actualizado."],
+      ["Crear una EI","Dashboard o Tracker EI → nueva EI → completar datos mínimos → revisar posible duplicado → confirmar creación → detalle de la nueva EI."],
+      ["Gestionar usuarios","Navegación → gestión de usuarios → buscar usuario → crear o editar → confirmar rol y permisos."]
+    ],
+    orientacion: {
+      nombre:"Orientación — KLD", duracion:"4 min", prioridad:"P0",
+      contexto:"Acabas de entrar a EI Tracker y necesitas identificar la situación general de las Evaluaciones de Impacto del banco.",
+      tarea:"Revisa el dashboard y cuéntame qué áreas requieren atención.",
+      observar:["Lectura de estadísticas globales.","Interpretación de estados de actualización.","Uso esperado de filtros.","Priorización de divisiones, sectores o EIs."],
+      sondeo:[]
+    },
+    navegacion: {
+      nombre:"Navegación común — KLD", duracion:"5 min", prioridad:"P1",
+      contexto:"Necesitas revisar una EI específica antes de decidir si debes intervenir.",
+      tarea:"Encuentra la EI, abre el detalle y revisa su estado, responsable, última actualización e histórico.",
+      observar:["Uso de filtros y Tracker EI.","Comprensión del estado.","Acceso a detalle e histórico.","Claridad de acciones disponibles."],
+      sondeo:[]
+    },
+    criticas: {
+      A: {
+        nombre:"Tarea crítica A — monitorear actualizaciones automáticas", duracion:"13 min", prioridad:"P0",
+        contexto:"Necesitas comprobar qué EIs han sido marcadas automáticamente para actualización y conocer su progreso.",
+        tarea:"Localiza las actualizaciones, distingue cuáles están pendientes y cuáles se han completado, y abre una EI pendiente para revisar su situación.",
+        observar:["Descubrimiento del listado o indicador de actualizaciones.","Comprensión de que el proceso se generó automáticamente.","Identificación del Reviewer o responsable.","Acceso a actualizaciones pendientes y completadas.","Distinción entre pendiente, completada y vencida."],
+        sondeo:[]
+      },
+      B: {
+        nombre:"Tarea crítica B — editar una EI", duracion:"13 min", prioridad:"P0",
+        contexto:"Detectaste que el estado y la división responsable de una EI son incorrectos.",
+        tarea:"Corrige la información y comprueba que el cambio quedó registrado.",
+        observar:["Descubrimiento de edición.","Validación de datos.","Guardado y confirmación.","Descarte de cambios si intenta salir.","Histórico actualizado."],
+        sondeo:[]
+      },
+      C: {
+        nombre:"Tarea crítica C — crear una EI (o gestionar usuarios)", duracion:"13 min", prioridad:"P0",
+        contexto:"Necesitas registrar una EI que todavía no aparece en la plataforma.",
+        tarea:"Crea la evaluación con la información disponible y revisa qué ocurriría si existiera una posible duplicada. Si la sesión lo permite, continúa con la gestión de usuarios (P2): busca un usuario, edítalo y confirma su rol y permisos.",
+        observar:["Descubrimiento de “Nueva EI”.","Comprensión de campos obligatorios.","Carga cognitiva del formulario.","Prevención de duplicados.","Confirmación y acceso al nuevo detalle.","(P2) Localización de la gestión de usuarios y comprensión de roles y permisos."],
+        sondeo:[]
+      }
+    },
+    variantes: {
+      A:"Sesión A — Monitorear actualizaciones automáticas",
+      B:"Sesión B — Editar EI",
+      C:"Sesión C — Crear EI o gestionar usuarios"
+    }
+  },
+
+  Consultant: {
+    objetivo: "Consultar las Evaluaciones de Impacto, explorar información mediante filtros y reportar una nueva evaluación cuando no existe en el sistema.",
+    tareas: [
+      ["P0","Encontrar y consultar una EI","Localiza una evaluación, abre el detalle y obtiene la información necesaria."],
+      ["P0","Reportar una nueva EI","Registra una nueva evaluación mediante el flujo de reporte y recibe confirmación."],
+      ["P1","Explorar estadísticas generales","Comprende volumen, estados, sectores, divisiones y evolución de las EIs."],
+      ["P1","Aplicar y limpiar filtros","Ajusta el alcance del dashboard y Tracker sin perder orientación."],
+      ["P1","Revisar detalle e histórico","Consulta estado, división, país, última actualización, metodología, publicaciones y cambios previos."],
+      ["P2","Exportar información","Descarga información cuando su permiso y el alcance del producto lo permitan."],
+      ["Informativa","Interpretar estados e indicadores","Comprende la situación de las EIs sin asumir responsabilidades de actualización."],
+      ["Restringida","Editar una EI existente","La acción no está disponible."],
+      ["Restringida","Completar actualizaciones pendientes","La acción no está disponible."],
+      ["Restringida","Gestionar usuarios","La acción no está disponible."]
+    ],
+    happyPaths: [
+      ["Consultar una EI","Dashboard → aplicar filtros → Tracker EI → localizar EI → abrir detalle → revisar histórico → volver al listado conservando el contexto."],
+      ["Reportar una nueva EI","Dashboard o Tracker EI → reportar nueva EI → completar datos requeridos → revisar posible duplicado → enviar reporte → confirmación."]
+    ],
+    orientacion: {
+      nombre:"Orientación — Consultant", duracion:"4 min", prioridad:"P1",
+      contexto:"Acabas de entrar a EI Tracker y quieres entender la situación general de las Evaluaciones de Impacto.",
+      tarea:"Revisa la pantalla y cuéntame qué información te resulta más útil.",
+      observar:["Comprensión de indicadores y estados.","Identificación de filtros.","Expectativas sobre las acciones disponibles.","Comprensión del alcance de consulta."],
+      sondeo:[]
+    },
+    navegacion: {
+      nombre:"Navegación común — Consultant", duracion:"5 min", prioridad:"P0",
+      contexto:"Necesitas consultar una EI de un sector y país específicos.",
+      tarea:"Aplica los filtros que consideres necesarios, encuentra la EI y revisa su detalle e histórico.",
+      observar:["Uso de filtros y Tracker EI.","Comprensión del detalle.","Ausencia de expectativas de edición.","Capacidad de volver sin perder filtros."],
+      sondeo:[]
+    },
+    criticas: {
+      A: {
+        nombre:"Tarea crítica — reportar una nueva EI", duracion:"13 min", prioridad:"P0",
+        contexto:"Conoces una Evaluación de Impacto que no aparece en la plataforma y necesitas reportarla.",
+        tarea:"Inicia el reporte, completa la información disponible y envíalo.",
+        observar:["Descubrimiento de la acción “Reportar nueva EI”.","Diferencia entre reportar una nueva EI y editar una existente.","Comprensión de campos obligatorios.","Manejo de una posible duplicada.","Confirmación y expectativas sobre el siguiente paso."],
+        sondeo:["¿Qué esperas que ocurra con la evaluación después de reportarla?"]
+      },
+      B: {
+        nombre:"Tarea crítica — reportar una nueva EI", duracion:"13 min", prioridad:"P0",
+        contexto:"Conoces una Evaluación de Impacto que no aparece en la plataforma y necesitas reportarla.",
+        tarea:"Inicia el reporte, completa la información disponible y envíalo.",
+        observar:["Descubrimiento de la acción “Reportar nueva EI”.","Diferencia entre reportar una nueva EI y editar una existente.","Comprensión de campos obligatorios.","Manejo de una posible duplicada.","Confirmación y expectativas sobre el siguiente paso."],
+        sondeo:["¿Qué esperas que ocurra con la evaluación después de reportarla?"]
+      },
+      C: {
+        nombre:"Tarea crítica C — consulta, filtros, histórico y recuperación sin resultados", duracion:"13 min", prioridad:"P1",
+        contexto:"Estás explorando las EIs de un sector y país concretos. En algún momento la combinación de filtros que aplicas no devuelve ningún resultado.",
+        tarea:"Explora las estadísticas, filtra hasta encontrar una EI, revisa su detalle e histórico y, cuando no obtengas resultados, recupera la búsqueda hasta volver a ver información útil.",
+        observar:["Comprensión de qué filtros están activos.","Reacción ante el estado sin resultados y claridad del mensaje.","Capacidad de limpiar o ajustar filtros sin perder orientación.","Comprensión del histórico y de la información de detalle.","Expectativas sobre exportar información (P2)."],
+        sondeo:["¿Qué te dice la pantalla cuando no hay resultados?","¿Qué harías para volver a ver información útil?"]
+      }
+    },
+    variantes: {
+      A:"Sesión A — Consultar EI + reportar nueva",
+      B:"Sesión B — Consultar EI + reportar nueva",
+      C:"Sesión C — Consulta, filtros, histórico y recuperación sin resultados"
+    }
+  }
+};
+
+const PREFIJO_ROL = { Reviewer:"REV", KLD:"KLD", Consultant:"CON" };
+
+function bloquesDeSesion(rol, variante) {
+  const g = GUION[rol];
+  if (!g) return [];
+  const crit = g.criticas[variante] || g.criticas.A;
+  return [
+    { bloque:"Orientación", ...g.orientacion },
+    { bloque:"Navegación común", ...g.navegacion },
+    { bloque:"Tarea crítica", ...crit }
+  ];
+}
+/* ===================== Conexión directa con Airtable (API REST) =====================
+   Esta versión NO depende de Cowork. Cada persona pega su propio token de Airtable
+   (Personal Access Token) la primera vez que abre la página. El token se guarda
+   solo en su navegador (localStorage) y nunca se sube a GitHub ni se comparte
+   con nadie más. Más info: ver README.md del repositorio. */
+let ultimoError = "";
+const TOKEN_KEY = "ei-tracker-airtable-token";
+
+function getToken() { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; } }
+function setToken(t) { try { localStorage.setItem(TOKEN_KEY, t.trim()); } catch (e) {} }
+function borrarToken() { try { localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
+
+async function airtableFetch(path, options) {
+  const token = getToken();
+  if (!token) { const e = new Error("Falta el token de Airtable."); e.sinToken = true; throw e; }
+  const res = await fetch("https://api.airtable.com/v0/" + BASE + path, {
+    ...options,
+    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json", ...(options && options.headers) }
+  });
+  let body = null;
+  try { body = await res.json(); } catch (e) {}
+  if (!res.ok) {
+    const msg = (body && body.error && (body.error.message || body.error.type)) || ("HTTP " + res.status);
+    const e = new Error(msg);
+    e.status = res.status;
+    throw e;
+  }
+  return body;
+}
+
+// La API REST de Airtable usa nombres de campo (no fldXXXX) al leer/escribir por nombre de tabla.
+// Convertimos los mapas F.* (que en el resto del código son IDs) a nombres reales una sola vez.
+const NOMBRE_TABLA = { [T.ses]: "Sesiones", [T.tar]: "Registro por tarea", [T.hal]: "Hallazgos", [T.ins]: "Insights" };
+
+async function listRecords(tableId) {
+  let records = [], offset;
+  do {
+    const qs = offset ? "?pageSize=100&offset=" + encodeURIComponent(offset) : "?pageSize=100";
+    const r = await conReintento(() => airtableFetch("/" + encodeURIComponent(NOMBRE_TABLA[tableId]) + qs));
+    records = records.concat((r.records || []).map(normalizarRegistro));
+    offset = r.offset;
+  } while (offset);
+  return { records };
+}
+
+function normalizarRegistro(rec) {
+  // homogeneiza para que val(rec, fieldId) siga funcionando: cellValuesByFieldId se llena
+  // buscando, para cada fieldId conocido, el campo por NOMBRE dentro de rec.fields.
+  return { id: rec.id, fields: rec.fields, cellValuesByFieldId: rec.fields };
+}
+
+async function createRecords(tableId, records) {
+  const porNombre = records.map((r) => ({ fields: aFieldsPorNombre(tableId, r.fields) }));
+  const out = [];
+  for (let i = 0; i < porNombre.length; i += 10) {
+    const lote = porNombre.slice(i, i + 10);
+    const r = await conReintento(() => airtableFetch("/" + encodeURIComponent(NOMBRE_TABLA[tableId]), { method: "POST", body: JSON.stringify({ records: lote, typecast: true }) }));
+    out.push(...(r.records || []).map(normalizarRegistro));
+  }
+  return { records: out };
+}
+
+async function updateRecords(tableId, records) {
+  const porNombre = records.map((r) => ({ id: r.id, fields: aFieldsPorNombre(tableId, r.fields) }));
+  const out = [];
+  for (let i = 0; i < porNombre.length; i += 10) {
+    const lote = porNombre.slice(i, i + 10);
+    const r = await conReintento(() => airtableFetch("/" + encodeURIComponent(NOMBRE_TABLA[tableId]), { method: "PATCH", body: JSON.stringify({ records: lote, typecast: true }) }));
+    out.push(...(r.records || []).map(normalizarRegistro));
+  }
+  return { records: out };
+}
+
+async function deleteRecords(tableId, recordIds) {
+  const out = [];
+  for (let i = 0; i < recordIds.length; i += 10) {
+    const lote = recordIds.slice(i, i + 10);
+    const qs = lote.map((id) => "records[]=" + encodeURIComponent(id)).join("&");
+    const r = await conReintento(() => airtableFetch("/" + encodeURIComponent(NOMBRE_TABLA[tableId]) + "?" + qs, { method: "DELETE" }));
+    out.push(...(r.records || []));
+  }
+  return { records: out };
+}
+
+async function conReintento(fn) {
+  let ultima = null;
+  for (let intento = 0; intento < 2; intento++) {
+    try { return await fn(); }
+    catch (e) {
+      ultima = e;
+      if (e.sinToken || e.status === 401 || e.status === 403) break; // no reintentar si el token está mal
+      await new Promise((r) => setTimeout(r, 700));
+    }
+  }
+  ultimoError = ultima ? ultima.message : "sin respuesta";
+  throw ultima || new Error("Sin respuesta de Airtable");
+}
+
+// FIDS.ses.id === "fldRTVzD6xfMTxAWm" pero para la API REST necesitamos el NOMBRE del campo,
+// ej. "ID de sesión". NOMBRES_CAMPO traduce fieldId -> nombre real, generado desde F y el
+// texto de las claves usadas en fichaFields()/etc. Como alternativa simple y robusta,
+// mantenemos aquí el mapeo explícito fieldId -> nombre de columna en Airtable.
+const NOMBRE_CAMPO = {};
+(function construirNombresCampo() {
+  const registrar = (fid, nombre) => { NOMBRE_CAMPO[fid] = nombre; };
+  const S = F.ses;
+  registrar(S.id, "ID de sesión"); registrar(S.fecha, "Fecha"); registrar(S.hora, "Hora");
+  registrar(S.rol, "Rol"); registrar(S.participante, "Participante"); registrar(S.experiencia, "Experiencia con EIs");
+  registrar(S.facilitador, "Facilitador"); registrar(S.observador, "Observador"); registrar(S.modalidad, "Modalidad");
+  registrar(S.dispositivo, "Dispositivo"); registrar(S.version, "Versión del prototipo"); registrar(S.variante, "Variante");
+  registrar(S.varianteTxt, "Tarea crítica probada"); registrar(S.consentimiento, "Consentimiento de grabación");
+  registrar(S.grabacion, "Enlace a grabación"); registrar(S.incidencias, "Incidencias técnicas");
+  registrar(S.mSinAyuda, "Tareas sin ayuda"); registrar(S.mConAyuda, "Tareas con ayuda"); registrar(S.mNoCompl, "Tareas no completadas");
+  registrar(S.mErrores, "Errores críticos"); registrar(S.mRetrocesos, "Retrocesos");
+  registrar(S.mFacilidad, "Facilidad percibida"); registrar(S.mConfianza, "Confianza percibida");
+  registrar(S.cConfuso, "Cierre · más confuso"); registrar(S.cSiguiente, "Cierre · no supo qué seguía");
+  registrar(S.cFaltante, "Cierre · información faltante"); registrar(S.cCambio, "Cierre · un solo cambio");
+  registrar(S.sObjetivo, "Objetivo probado"); registrar(S.sResultado, "Resultado general");
+  registrar(S.sNecesidad, "Necesidad principal"); registrar(S.sDificultad, "Mayor dificultad");
+  registrar(S.sClaro, "Aspecto más claro"); registrar(S.sRiesgo, "Riesgo operativo");
+  registrar(S.preguntas, "Preguntas abiertas"); registrar(S.creado, "Creado en");
+  registrar(S.respInicial, "Respuesta a la pregunta inicial");
+
+  const A = F.tar;
+  registrar(A.registro, "Registro"); registrar(A.sesion, "Sesión"); registrar(A.idSesion, "ID de sesión");
+  registrar(A.rol, "Rol"); registrar(A.bloque, "Bloque"); registrar(A.tarea, "Tarea"); registrar(A.prioridad, "Prioridad");
+  registrar(A.resultado, "Resultado"); registrar(A.tiempo, "Tiempo aproximado"); registrar(A.ruta, "Ruta seguida");
+  registrar(A.primerClic, "Primer clic o acción"); registrar(A.errores, "Errores o retrocesos");
+  registrar(A.bloqueo, "Punto de bloqueo"); registrar(A.ayuda, "Ayuda proporcionada");
+  registrar(A.expectativa, "Expectativa de la persona"); registrar(A.interpreto, "Resultado que interpretó");
+  registrar(A.cita, "Cita textual"); registrar(A.observacion, "Observación del facilitador");
+
+  const H = F.hal;
+  registrar(H.id, "ID"); registrar(H.sesion, "Sesión"); registrar(H.idSesion, "ID de sesión"); registrar(H.rol, "Rol");
+  registrar(H.tarea, "Tarea relacionada"); registrar(H.hallazgo, "Hallazgo observado"); registrar(H.evidencia, "Evidencia o cita");
+  registrar(H.impacto, "Impacto"); registrar(H.severidad, "Severidad"); registrar(H.recomendacion, "Recomendación inicial");
+
+  const N = F.ins;
+  registrar(N.id, "ID"); registrar(N.sesion, "Sesión"); registrar(N.idSesion, "ID de sesión"); registrar(N.rol, "Rol");
+  registrar(N.insight, "Insight"); registrar(N.necesidad, "Necesidad"); registrar(N.motivacion, "Motivación o contexto");
+  registrar(N.barrera, "Barrera"); registrar(N.consecuencia, "Consecuencia"); registrar(N.hallazgos, "Hallazgos que lo sustentan");
+  registrar(N.confianza, "Confianza"); registrar(N.tema, "Tema");
+})();
+
+function aFieldsPorNombre(tableId, fieldsPorId) {
+  const out = {};
+  Object.keys(fieldsPorId).forEach((fid) => {
+    const nombre = NOMBRE_CAMPO[fid];
+    if (!nombre) return; // campo sin mapeo conocido: se omite en vez de romper el guardado
+    out[nombre] = fieldsPorId[fid];
+  });
+  return out;
+}
+
+function val(rec, fid) {
+  const nombre = NOMBRE_CAMPO[fid];
+  const src = rec.cellValuesByFieldId || rec.fields || {};
+  const v = nombre ? src[nombre] : undefined;
+  if (v === undefined || v === null) return "";
+  if (Array.isArray(v)) {
+    if (v.length && typeof v[0] === "object" && v[0] && "name" in v[0]) return v.map((x) => x.name);
+    return v;
+  }
+  if (typeof v === "object") return v.name ?? "";
+  return v;
+}
+const ids = () => undefined; // ya no se filtran fieldIds al listar: la API REST siempre trae todos los campos por nombre
+
+/* ===================== Estado ===================== */
+const state = { sessions: [], tareas: [], hallazgos: [], insights: [], conectado: false, tab: "registrar" };
+const ui = { pasoAbierto: "apertura", masDetalle: {}, sesionAbierta: null, chuleta: false };
+const timers = {};
+
+const ahoraHora = () => new Date().toTimeString().slice(0, 5);
+
+const nuevoDraft = () => ({
+  recId: null,
+  childIds: { tar: [], hal: [], ins: [] },
+  idSesion: "",
+  ficha: {
+    fecha: new Date().toISOString().slice(0, 10), hora: ahoraHora(), rol: "Reviewer",
+    participante: "", critica: "A", consentimiento: "Sí", grabacion: "", incidencias: ""
+  },
+  respInicial: "",
+  tareas: [],
+  metricas: { errores: "", retrocesos: "", facilidad: "", confianza: "" },
+  cierre: { confuso: "", siguiente: "", faltante: "", cambio: "" },
+  sintesis: { objetivo: "", resultado: "", necesidad: "", dificultad: "", claro: "", riesgo: "" },
+  preguntas: "",
+  hallazgos: [],
+  insights: []
+});
+let draft = nuevoDraft();
+
+const nuevaFila = (b) => ({
+  bloque: b.bloque, tarea: b.nombre, prioridad: b.prioridad, resultado: "", tiempo: "", ruta: "",
+  primerClic: "", errores: "", bloqueo: "", ayuda: "", expectativa: "", interpreto: "", cita: "",
+  observacion: "", observados: [], _ref: b
+});
+const nuevoHallazgo = (n) => ({ codigo: "H-" + String(n).padStart(2, "0"), tarea: "", hallazgo: "", evidencia: "", impacto: "", severidad: "Media", recomendacion: "" });
+const nuevoInsight = (n) => ({ codigo: "I-" + String(n).padStart(2, "0"), necesidad: "", motivacion: "", barrera: "", consecuencia: "", confianza: "Media", tema: "" });
+
+function sincronizarTareas() {
+  const bs = bloquesDeSesion(draft.ficha.rol, draft.ficha.critica);
+  const prev = draft.tareas;
+  draft.tareas = bs.map((bl, i) => {
+    const p = prev[i];
+    if (p && p.bloque === bl.bloque && p.tarea === bl.nombre) return { ...p, prioridad: bl.prioridad, _ref: bl };
+    if (p && p.bloque === bl.bloque) return { ...p, tarea: bl.nombre, prioridad: bl.prioridad, observados: [], _ref: bl };
+    return nuevaFila(bl);
+  });
+}
+
+function guardarBorrador() { try { localStorage.setItem("ei-draft-v2", JSON.stringify(draft)); } catch (e) {} }
+function cargarBorrador() {
+  try { const s = localStorage.getItem("ei-draft-v2"); if (s) { const d = JSON.parse(s); if (d && d.ficha) draft = d; } } catch (e) {}
+  if (!draft.tareas || !draft.tareas.length) sincronizarTareas();
+  else sincronizarTareas();
+}
+
+/* ===================== Utilidades ===================== */
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const resClase = (r) => r === "Éxito sin ayuda" ? "ok" : r === "Éxito con ayuda" ? "help" : r === "No completada" ? "no" : "";
+const opts = (arr, sel) => arr.map((o) => `<option value="${esc(o)}"${o === sel ? " selected" : ""}>${esc(o)}</option>`).join("");
+function toast(msg, err) {
+  const t = document.createElement("div");
+  t.className = "toast" + (err ? " err" : "");
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), err ? 7000 : 2600);
+}
+function setPath(o, path, v) { const p = path.split("."); let x = o; for (let i = 0; i < p.length - 1; i++) x = x[p[i]]; x[p[p.length - 1]] = v; }
+function getPath(o, path) { return path.split(".").reduce((a, k) => (a == null ? a : a[k]), o); }
+function metricasCalculadas(ts) {
+  const c = { sin: 0, con: 0, no: 0 };
+  ts.forEach((t) => { if (t.resultado === "Éxito sin ayuda") c.sin++; else if (t.resultado === "Éxito con ayuda") c.con++; else if (t.resultado === "No completada") c.no++; });
+  return c;
+}
+function siguienteId(rol) {
+  const pre = PREFIJO_ROL[rol];
+  let max = 0;
+  state.sessions.forEach((s) => {
+    const m = String(val(s, F.ses.id)).match(new RegExp("^" + pre + "-(\\d+)$"));
+    if (m) max = Math.max(max, Number(m[1]));
+  });
+  return pre + "-" + String(max + 1).padStart(2, "0");
+}
+
+function campo(label, path, tipo, extra) {
+  const v = getPath(draft, path) ?? "";
+  const hint = extra && extra.hint ? `<span class="h">${esc(extra.hint)}</span>` : "";
+  let c;
+  if (tipo === "select") c = `<select data-path="${path}">${opts(extra.options, v)}</select>`;
+  else if (tipo === "textarea") c = `<textarea data-path="${path}" rows="${(extra && extra.rows) || 2}" placeholder="${esc((extra && extra.ph) || "")}">${esc(v)}</textarea>`;
+  else c = `<input type="${tipo}" data-path="${path}" value="${esc(v)}" placeholder="${esc((extra && extra.ph) || "")}">`;
+  return `<label class="f"><span class="l">${esc(label)}</span>${c}${hint}</label>`;
+}
+
+/* ===================== Cronómetros ===================== */
+function crono(id) { return timers[id] || (timers[id] = { ms: 0, desde: null }); }
+function cronoMs(id) { const t = crono(id); return t.ms + (t.desde ? Date.now() - t.desde : 0); }
+function cronoTexto(id) {
+  const ms = cronoMs(id);
+  const s = Math.floor(ms / 1000);
+  return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+}
+setInterval(() => {
+  Object.keys(timers).forEach((id) => {
+    const el = document.getElementById("crono-" + id);
+    if (!el) return;
+    el.textContent = cronoTexto(id);
+    const t = timers[id];
+    const min = Number(el.dataset.min || 0);
+    const ms = t.ms + (t.desde ? Date.now() - t.desde : 0);
+    el.className = "crono" + (t.desde ? " run" : "") + (min && ms > min * 60000 ? " over" : "");
+  });
+}, 1000);
+
+/* ===================== Formulario guiado ===================== */
+const PASOS = [
+  { id: "apertura", n: 1, tit: "Apertura", min: 3 },
+  { id: "t0", n: 2, tit: "Orientación", min: 4 },
+  { id: "t1", n: 3, tit: "Navegación común", min: 5 },
+  { id: "t2", n: 4, tit: "Tarea crítica", min: 13 },
+  { id: "cierre", n: 5, tit: "Cierre", min: 5 },
+  { id: "despues", n: 6, tit: "Después de la sesión", min: 0 }
+];
+
+function pasoHecho(p) {
+  if (p.id === "apertura") return !!draft.respInicial.trim();
+  if (p.id.startsWith("t")) { const t = draft.tareas[Number(p.id[1])]; return !!(t && t.resultado); }
+  if (p.id === "cierre") return !!(draft.metricas.facilidad || draft.cierre.confuso.trim() || draft.cierre.cambio.trim());
+  if (p.id === "despues") return !!(draft.sintesis.resultado.trim() || draft.hallazgos.length);
+  return false;
+}
+
+function htmlCabeceraPaso(p) {
+  const abierto = ui.pasoAbierto === p.id;
+  const hecho = pasoHecho(p);
+  return `<button class="paso-head" data-act="toggle-paso" data-paso="${p.id}">
+    <span class="num">${hecho ? "✓" : p.n}</span>
+    <span class="tit">${esc(p.tit)}</span>
+    ${p.min ? `<span class="min">${p.min} min</span>` : ""}
+    <span class="sp"></span>
+    ${p.min ? `<span class="crono${crono(p.id).desde ? " run" : ""}${cronoMs(p.id) > p.min * 60000 ? " over" : ""}" id="crono-${p.id}" data-min="${p.min}">${cronoTexto(p.id)}</span>` : ""}
+    <span class="min">${abierto ? "▾" : "▸"}</span>
+  </button>`;
+}
+
+function htmlCrono(id) {
+  const t = crono(id);
+  return `<div class="row-actions" style="justify-content:flex-start;margin:0 0 11px">
+    <button class="btn sm" data-act="crono" data-id="${id}">${t.desde ? "⏸ Pausar" : "▶ Iniciar"} cronómetro</button>
+    <button class="btn sm" data-act="crono-reset" data-id="${id}">Reiniciar</button>
+    <span class="mini">Solo es una ayuda; si te pasas del tiempo, anota el bloqueo y sigue.</span>
+  </div>`;
+}
+
+function htmlPasoTarea(idx) {
+  const t = draft.tareas[idx];
+  if (!t) return `<p class="mini">Elige el rol para cargar esta tarea.</p>`;
+  const r = t._ref || {};
+  const abierto = !!ui.masDetalle["t" + idx];
+  return `${htmlCrono("t" + idx)}
+  <div class="leer">
+    <span class="lbl">Lee esto en voz alta</span>
+    <p class="q">«${esc(r.contexto || "")}»</p>
+    <p class="q">«${esc(r.tarea || "")}»</p>
+  </div>
+  <div class="obs-list">
+    <span class="lbl">Marca lo que veas · ${esc(t.prioridad)} · ${esc(r.duracion || "")}</span>
+    ${(r.observar || []).map((o, j) => `<label class="chk ${t.observados && t.observados[j] ? "on" : ""}">
+      <input type="checkbox" data-obs="${idx}.${j}" ${t.observados && t.observados[j] ? "checked" : ""}>
+      <span>${esc(o)}</span></label>`).join("")}
+  </div>
+  <label class="f"><span class="l">¿Cómo terminó la tarea?</span></label>
+  <div class="opts">${RESULTADOS.map((v) => `<button class="opt ${t.resultado === v ? "on " + resClase(v) : ""}" data-act="set-res" data-i="${idx}" data-v="${esc(v)}">${esc(v)}</button>`).join("")}</div>
+  ${campo("Qué hizo · ruta seguida", `tareas.${idx}.ruta`, "textarea", { rows: 2, ph: "Dashboard → Tracker → filtro sector → detalle" })}
+  ${campo("Cita textual", `tareas.${idx}.cita`, "textarea", { rows: 2, ph: "Palabras exactas de la persona" })}
+  ${campo("Dónde se atascó", `tareas.${idx}.bloqueo`, "textarea", { rows: 2, ph: "Si no hubo bloqueo, déjalo vacío" })}
+  ${(r.sondeo || []).length ? `<div class="leer"><span class="lbl">Sondeo final · léelo al terminar</span>
+      ${r.sondeo.map((s) => `<p class="q">«${esc(s)}»</p>`).join("")}</div>` : ""}
+  <div class="masdet">
+    <button class="toggle" data-act="mas-detalle" data-k="t${idx}">${abierto ? "− Ocultar" : "+ Más detalle"} (tiempo, primer clic, errores, expectativas)</button>
+    ${abierto ? `<div style="margin-top:10px">
+      <div class="grid2">
+        ${campo("Tiempo aproximado", `tareas.${idx}.tiempo`, "text", { ph: "ej. 6 min" })}
+        ${campo("Primer clic o acción", `tareas.${idx}.primerClic`, "text")}
+      </div>
+      <div class="grid2">
+        ${campo("Errores o retrocesos", `tareas.${idx}.errores`, "textarea", { rows: 2 })}
+        ${campo("Ayuda que le diste", `tareas.${idx}.ayuda`, "textarea", { rows: 2 })}
+      </div>
+      <div class="grid2">
+        ${campo("Qué esperaba que ocurriera", `tareas.${idx}.expectativa`, "textarea", { rows: 2 })}
+        ${campo("Qué interpretó que pasó", `tareas.${idx}.interpreto`, "textarea", { rows: 2 })}
+      </div>
+      ${campo("Tu observación", `tareas.${idx}.observacion`, "textarea", { rows: 2 })}
+    </div>` : ""}
+  </div>`;
+}
+
+function htmlHallazgos() {
+  if (!draft.hallazgos.length) return `<p class="mini">Sin hallazgos todavía. Un hallazgo describe lo que ocurrió, de forma observable.</p>`;
+  return draft.hallazgos.map((h, i) => `<div class="blk">
+    <div class="item-head"><span class="ix">${esc(h.codigo)}</span>
+      <button class="btn sm danger" data-act="del-hallazgo" data-i="${i}">Quitar</button></div>
+    ${campo("Qué ocurrió", `hallazgos.${i}.hallazgo`, "textarea", { rows: 2 })}
+    <div class="grid2">
+      ${campo("En qué tarea", `hallazgos.${i}.tarea`, "select", { options: ["", ...draft.tareas.map((t) => t.tarea)] })}
+      <label class="f"><span class="l">Severidad</span>
+        <div class="opts" style="margin:0">${SEVERIDADES.map((s) => `<button class="opt ${h.severidad === s ? "on" : ""}" data-act="set-sev" data-i="${i}" data-v="${s}">${s}</button>`).join("")}</div>
+      </label>
+    </div>
+    ${campo("Evidencia o cita", `hallazgos.${i}.evidencia`, "textarea", { rows: 2 })}
+    <div class="grid2">
+      ${campo("Impacto", `hallazgos.${i}.impacto`, "textarea", { rows: 2, ph: "Qué consecuencia tiene para la persona y la operación" })}
+      ${campo("Recomendación inicial", `hallazgos.${i}.recomendacion`, "textarea", { rows: 2 })}
+    </div>
+  </div>`).join("");
+}
+
+function htmlInsights() {
+  if (!draft.insights.length) return `<p class="mini">Sin insights todavía. Un insight explica por qué importa lo que ocurrió.</p>`;
+  return draft.insights.map((n, i) => `<div class="blk">
+    <div class="item-head"><span class="ix">${esc(n.codigo)}</span>
+      <button class="btn sm danger" data-act="del-insight" data-i="${i}">Quitar</button></div>
+    <p class="mini">La persona necesita <b>[necesidad]</b> porque <b>[motivación]</b>, pero <b>[barrera]</b>, lo que provoca <b>[consecuencia]</b>.</p>
+    <div class="grid2">
+      ${campo("Necesidad", `insights.${i}.necesidad`, "text")}
+      ${campo("Motivación o contexto", `insights.${i}.motivacion`, "text")}
+    </div>
+    <div class="grid2">
+      ${campo("Barrera", `insights.${i}.barrera`, "text")}
+      ${campo("Consecuencia", `insights.${i}.consecuencia`, "text")}
+    </div>
+    <div class="grid2">
+      ${campo("Tema", `insights.${i}.tema`, "text", { hint: "Agrupa insights equivalentes entre sesiones", ph: "ej. Visibilidad de pendientes" })}
+      <label class="f"><span class="l">Confianza</span>
+        <div class="opts" style="margin:0">${CONFIANZAS.map((c) => `<button class="opt ${n.confianza === c ? "on" : ""}" data-act="set-conf" data-i="${i}" data-v="${c}">${c}</button>`).join("")}</div>
+      </label>
+    </div>
+  </div>`).join("");
+}
+
+function htmlCuerpoPaso(p) {
+  if (p.id === "apertura") {
+    return `${htmlCrono("apertura")}
+    <div class="leer"><span class="lbl">Lee esto en voz alta</span><p class="q">«${esc(APERTURA)}»</p></div>
+    <div class="grid2">
+      <label class="f"><span class="l">¿Autoriza la grabación?</span>
+        <div class="opts" style="margin:0">${["Sí", "No"].map((v) => `<button class="opt ${draft.ficha.consentimiento === v ? "on" : ""}" data-act="set-cons" data-v="${v}">${v}</button>`).join("")}</div>
+      </label>
+      ${campo("Enlace a la grabación (opcional)", "ficha.grabacion", "text", { ph: "https://" })}
+    </div>
+    <div class="leer"><span class="lbl">Pregunta inicial</span><p class="q">«${esc(PREGUNTA_INICIAL)}»</p></div>
+    ${campo("Qué respondió", "respInicial", "textarea", { rows: 3 })}
+    <div class="paso-next"><span class="mini">Recuerda: evaluamos la plataforma, no a la persona.</span>
+      <button class="btn primary" data-act="siguiente" data-paso="apertura">Siguiente: Orientación →</button></div>`;
+  }
+  if (p.id.startsWith("t")) {
+    const i = Number(p.id[1]);
+    const sig = PASOS[PASOS.findIndex((x) => x.id === p.id) + 1];
+    return `${htmlPasoTarea(i)}
+    <div class="paso-next"><span class="mini">${i === 2 ? "Es la única tarea P0 de la sesión." : ""}</span>
+      <button class="btn primary" data-act="siguiente" data-paso="${p.id}">Siguiente: ${esc(sig.tit)} →</button></div>`;
+  }
+  if (p.id === "cierre") {
+    return `${htmlCrono("cierre")}
+    <div class="leer"><span class="lbl">Pregunta 1</span><p class="q">«En una escala de 1 a 5, ¿qué tan fácil fue completar la tarea principal?»</p></div>
+    <div class="opts">${[1, 2, 3, 4, 5].map((n) => `<button class="opt num ${String(draft.metricas.facilidad) === String(n) ? "on" : ""}" data-act="set-num" data-k="facilidad" data-v="${n}">${n}</button>`).join("")}</div>
+    <p class="mini" style="margin:-4px 0 12px">1 = muy difícil · 5 = muy fácil</p>
+    <div class="leer"><span class="lbl">Pregunta 2</span><p class="q">«¿Qué fue lo más confuso o inesperado?»</p></div>
+    ${campo("Respuesta", "cierre.confuso", "textarea", { rows: 2 })}
+    <div class="leer"><span class="lbl">Pregunta 3</span><p class="q">«¿En algún momento no supiste qué iba a ocurrir después?»</p></div>
+    ${campo("Respuesta", "cierre.siguiente", "textarea", { rows: 2 })}
+    <div class="leer"><span class="lbl">Pregunta 4</span><p class="q">«¿Qué información o acción te faltó?»</p></div>
+    ${campo("Respuesta", "cierre.faltante", "textarea", { rows: 2 })}
+    <div class="leer"><span class="lbl">Pregunta 5</span><p class="q">«Si pudieras cambiar una sola cosa, ¿cuál sería?»</p></div>
+    ${campo("Respuesta", "cierre.cambio", "textarea", { rows: 2 })}
+    <label class="f"><span class="l">Confianza percibida (1–5, opcional)</span></label>
+    <div class="opts">${[1, 2, 3, 4, 5].map((n) => `<button class="opt num ${String(draft.metricas.confianza) === String(n) ? "on" : ""}" data-act="set-num" data-k="confianza" data-v="${n}">${n}</button>`).join("")}</div>
+    <div class="leer"><span class="lbl">Despedida</span><p class="q">«${esc(DESPEDIDA)}»</p></div>
+    <div class="paso-next"><span class="sp"></span>
+      <button class="btn primary" data-act="siguiente" data-paso="cierre">Siguiente: cerrar la sesión →</button></div>`;
+  }
+  // después
+  const m = metricasCalculadas(draft.tareas);
+  return `<p class="mini" style="margin-top:0">Completa esto justo después de la reunión, mientras lo tienes fresco. Puedes guardar y volver más tarde.</p>
+  <div class="stats">
+    <div class="stat"><span class="n">${m.sin}</span><span class="l">Sin ayuda</span></div>
+    <div class="stat"><span class="n">${m.con}</span><span class="l">Con ayuda</span></div>
+    <div class="stat"><span class="n">${m.no}</span><span class="l">No completadas</span></div>
+  </div>
+  <div class="sect">Síntesis</div>
+  <div class="grid2">
+    ${campo("Resultado general", "sintesis.resultado", "textarea", { rows: 2 })}
+    ${campo("Necesidad principal", "sintesis.necesidad", "textarea", { rows: 2 })}
+  </div>
+  <div class="grid2">
+    ${campo("Mayor dificultad", "sintesis.dificultad", "textarea", { rows: 2 })}
+    ${campo("Aspecto más claro", "sintesis.claro", "textarea", { rows: 2 })}
+  </div>
+  <div class="grid2">
+    ${campo("Riesgo operativo observado", "sintesis.riesgo", "textarea", { rows: 2 })}
+    ${campo("Objetivo probado", "sintesis.objetivo", "textarea", { rows: 2, ph: "Qué queríamos comprobar en esta sesión" })}
+  </div>
+  ${campo("Preguntas abiertas", "preguntas", "textarea", { rows: 2, ph: "Qué no pudimos comprobar · qué condicionó el prototipo · qué confirmar con negocio o tecnología" })}
+
+  <div class="sect">Hallazgos</div>
+  <div id="cont-hallazgos">${htmlHallazgos()}</div>
+  <button class="btn sm" data-act="add-hallazgo">+ Añadir hallazgo</button>
+
+  <div class="sect">Insights</div>
+  <div id="cont-insights">${htmlInsights()}</div>
+  <button class="btn sm" data-act="add-insight">+ Añadir insight</button>
+
+  <div class="masdet">
+    <button class="toggle" data-act="mas-detalle" data-k="extra">${ui.masDetalle.extra ? "− Ocultar" : "+ Datos opcionales"} (errores críticos, retrocesos, incidencias técnicas)</button>
+    ${ui.masDetalle.extra ? `<div class="grid3" style="margin-top:10px">
+      ${campo("Errores críticos", "metricas.errores", "number")}
+      ${campo("Retrocesos", "metricas.retrocesos", "number")}
+      ${campo("Incidencias técnicas", "ficha.incidencias", "text")}
+    </div>` : ""}
+  </div>`;
+}
+
+function renderPasos() {
+  const cont = document.getElementById("pasos");
+  if (!cont) return;
+  cont.innerHTML = PASOS.map((p) => {
+    const abierto = ui.pasoAbierto === p.id;
+    return `<div class="paso ${abierto ? "open" : ""} ${pasoHecho(p) ? "done" : ""}">
+      ${htmlCabeceraPaso(p)}
+      ${abierto ? `<div class="paso-body">${htmlCuerpoPaso(p)}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+function renderRegistrar() {
+  const g = GUION[draft.ficha.rol];
+  const editando = !!draft.recId;
+  const idPrevisto = editando ? draft.idSesion : siguienteId(draft.ficha.rol);
+  const criticas = ["A", "B", "C"].map((k) => [k, g.criticas[k]])
+    .filter(([k, c], i, arr) => c && arr.findIndex(([, x]) => x.nombre === c.nombre) === i);
+  document.getElementById("v-registrar").innerHTML = `
+  <div class="card">
+    <div class="card-head">
+      <h3>${editando ? "Editar sesión " + esc(draft.idSesion) : "Nueva sesión"}</h3>
+      <span class="eyebrow">${editando ? "" : "Se guardará como " + esc(idPrevisto)}</span>
+    </div>
+    <div class="grid3">
+      ${campo("¿Con quién?", "ficha.participante", "text", { ph: "Código o alias, ej. P-01" })}
+      ${campo("Rol que evalúa", "ficha.rol", "select", { options: ROLES })}
+      ${campo("Fecha", "ficha.fecha", "date")}
+    </div>
+    <label class="f"><span class="l">¿Qué tarea crítica vas a probar? (una sola por sesión)</span></label>
+    <div class="opts">${criticas.map(([k, c]) => `<button class="opt ${draft.ficha.critica === k ? "on" : ""}" data-act="set-critica" data-v="${k}">${esc(c.nombre.replace(/^Tarea crítica [A-C] — /, "").replace(/^Tarea crítica — /, ""))}</button>`).join("")}</div>
+    <p class="mini">${esc(g.objetivo)}</p>
+  </div>
+
+  <div id="pasos"></div>
+
+  <div class="card" style="position:sticky;bottom:8px">
+    <div class="row-actions" style="justify-content:space-between">
+      <span class="mini">Todo lo que escribes se guarda solo en este navegador hasta que pulses guardar.</span>
+      <span>
+        ${editando ? `<button class="btn" data-act="cancelar-edicion">Cancelar</button>` : `<button class="btn" data-act="limpiar">Vaciar</button>`}
+        <button class="btn primary big" data-act="guardar" id="btn-guardar">${editando ? "Guardar cambios" : "Guardar sesión"}</button>
+      </span>
+    </div>
+  </div>`;
+  renderPasos();
+}
+/* ===================== Guardar en Airtable ===================== */
+function fichaFields(idSesion) {
+  const f = draft.ficha, m = metricasCalculadas(draft.tareas), mm = draft.metricas, c = draft.cierre, s = draft.sintesis;
+  const num = (v) => (v === "" || v === null || v === undefined ? undefined : Number(v));
+  const crit = (GUION[f.rol].criticas[f.critica] || {}).nombre || "";
+  const o = {};
+  o[F.ses.id] = idSesion;
+  o[F.ses.fecha] = f.fecha || undefined;
+  o[F.ses.hora] = f.hora;
+  o[F.ses.rol] = f.rol;
+  o[F.ses.participante] = f.participante;
+  o[F.ses.modalidad] = "Remota";
+  o[F.ses.variante] = f.critica;
+  o[F.ses.varianteTxt] = crit;
+  o[F.ses.consentimiento] = f.consentimiento;
+  if (f.grabacion) o[F.ses.grabacion] = f.grabacion;
+  o[F.ses.incidencias] = f.incidencias;
+  o[F.ses.respInicial] = draft.respInicial;
+  o[F.ses.mSinAyuda] = m.sin; o[F.ses.mConAyuda] = m.con; o[F.ses.mNoCompl] = m.no;
+  o[F.ses.mErrores] = num(mm.errores); o[F.ses.mRetrocesos] = num(mm.retrocesos);
+  o[F.ses.mFacilidad] = num(mm.facilidad); o[F.ses.mConfianza] = num(mm.confianza);
+  o[F.ses.cConfuso] = c.confuso; o[F.ses.cSiguiente] = c.siguiente; o[F.ses.cFaltante] = c.faltante; o[F.ses.cCambio] = c.cambio;
+  o[F.ses.sObjetivo] = s.objetivo; o[F.ses.sResultado] = s.resultado; o[F.ses.sNecesidad] = s.necesidad;
+  o[F.ses.sDificultad] = s.dificultad; o[F.ses.sClaro] = s.claro; o[F.ses.sRiesgo] = s.riesgo;
+  o[F.ses.preguntas] = draft.preguntas;
+  o[F.ses.creado] = new Date().toISOString();
+  Object.keys(o).forEach((k) => { if (o[k] === undefined) delete o[k]; });
+  return o;
+}
+
+async function guardarSesion() {
+  const f = draft.ficha;
+  if (!f.participante.trim()) { toast("Escribe con quién fue la sesión (participante)", true); return; }
+  const btn = document.getElementById("btn-guardar");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const idSesion = draft.recId ? draft.idSesion : siguienteId(f.rol);
+  try {
+    let recId = draft.recId;
+    if (recId) {
+      await updateRecords(T.ses, [{ id: recId, fields: fichaFields(idSesion) }]);
+      const del = [[T.tar, draft.childIds.tar], [T.hal, draft.childIds.hal], [T.ins, draft.childIds.ins]];
+      for (const [tid, arr] of del) if (arr && arr.length) await deleteRecords(tid, arr);
+    } else {
+      const r = await createRecords(T.ses, [{ fields: fichaFields(idSesion) }]);
+      recId = r.records[0].id;
+    }
+
+    const tareas = draft.tareas.filter((t) => t.tarea).map((t) => {
+      const marcados = ((t._ref && t._ref.observar) || []).filter((_, j) => t.observados && t.observados[j]);
+      const obs = (marcados.length ? "Observado: " + marcados.join(" · ") + (t.observacion ? "\n" : "") : "") + (t.observacion || "");
+      const o = {};
+      o[F.tar.registro] = `${idSesion} · ${t.tarea}`;
+      o[F.tar.sesion] = [recId]; o[F.tar.idSesion] = idSesion; o[F.tar.rol] = f.rol;
+      o[F.tar.bloque] = t.bloque; o[F.tar.tarea] = t.tarea; o[F.tar.prioridad] = t.prioridad;
+      if (t.resultado) o[F.tar.resultado] = t.resultado;
+      o[F.tar.tiempo] = t.tiempo; o[F.tar.ruta] = t.ruta; o[F.tar.primerClic] = t.primerClic;
+      o[F.tar.errores] = t.errores; o[F.tar.bloqueo] = t.bloqueo; o[F.tar.ayuda] = t.ayuda;
+      o[F.tar.expectativa] = t.expectativa; o[F.tar.interpreto] = t.interpreto;
+      o[F.tar.cita] = t.cita; o[F.tar.observacion] = obs;
+      return { fields: o };
+    });
+    const hallazgos = draft.hallazgos.filter((h) => h.hallazgo || h.evidencia).map((h) => {
+      const o = {};
+      o[F.hal.id] = `${idSesion} · ${h.codigo}`; o[F.hal.sesion] = [recId];
+      o[F.hal.idSesion] = idSesion; o[F.hal.rol] = f.rol; o[F.hal.tarea] = h.tarea;
+      o[F.hal.hallazgo] = h.hallazgo; o[F.hal.evidencia] = h.evidencia; o[F.hal.impacto] = h.impacto;
+      o[F.hal.severidad] = h.severidad; o[F.hal.recomendacion] = h.recomendacion;
+      return { fields: o };
+    });
+    const insights = draft.insights.filter((n) => n.necesidad || n.barrera).map((n) => {
+      const o = {};
+      o[F.ins.id] = `${idSesion} · ${n.codigo}`; o[F.ins.sesion] = [recId];
+      o[F.ins.idSesion] = idSesion; o[F.ins.rol] = f.rol;
+      o[F.ins.insight] = `La persona necesita ${n.necesidad} porque ${n.motivacion}, pero ${n.barrera}, lo que provoca ${n.consecuencia}.`;
+      o[F.ins.necesidad] = n.necesidad; o[F.ins.motivacion] = n.motivacion;
+      o[F.ins.barrera] = n.barrera; o[F.ins.consecuencia] = n.consecuencia;
+      o[F.ins.confianza] = n.confianza; o[F.ins.tema] = n.tema || n.necesidad;
+      return { fields: o };
+    });
+    if (tareas.length) await createRecords(T.tar, tareas);
+    if (hallazgos.length) await createRecords(T.hal, hallazgos);
+    if (insights.length) await createRecords(T.ins, insights);
+
+    toast("Sesión " + idSesion + " guardada en Airtable");
+    draft = nuevoDraft(); sincronizarTareas(); guardarBorrador();
+    Object.keys(timers).forEach((k) => delete timers[k]);
+    ui.pasoAbierto = "apertura";
+    await cargarDatos();
+    irA("sesiones");
+  } catch (e) {
+    toast("No se pudo guardar: " + e.message + " — tu borrador sigue aquí", true);
+    btn.disabled = false; btn.textContent = draft.recId ? "Guardar cambios" : "Guardar sesión";
+  }
+}
+
+/* ===================== Cargar datos ===================== */
+async function cargarDatos() {
+  const s = await listRecords(T.ses);
+  const t = await listRecords(T.tar);
+  const h = await listRecords(T.hal);
+  const n = await listRecords(T.ins);
+  state.sessions = (s.records || []).sort((a, b) => String(val(b, F.ses.creado)).localeCompare(String(val(a, F.ses.creado))));
+  state.tareas = t.records || []; state.hallazgos = h.records || []; state.insights = n.records || [];
+  state.conectado = true;
+  document.getElementById("cnt-sess").textContent = "(" + state.sessions.length + ")";
+  const c = document.getElementById("conn");
+  c.className = "note";
+  c.innerHTML = `<span>◈</span><span class="grow">Conectado a Airtable · ${state.sessions.length} ${state.sessions.length === 1 ? "sesión" : "sesiones"}, ${state.hallazgos.length} hallazgos, ${state.insights.length} insights guardados.</span>`;
+}
+
+function bannerError(e) {
+  state.conectado = false;
+  const c = document.getElementById("conn");
+  if (e && e.sinToken) {
+    c.className = "note warn";
+    c.innerHTML = `<span>🔑</span><span class="grow"><b>Falta tu token de Airtable.</b> Pégalo para conectar con la base compartida del equipo.</span>
+      <button class="btn sm primary" data-act="config-token">Configurar token</button>`;
+    return;
+  }
+  c.className = "note err";
+  const esAuth = e && (e.status === 401 || e.status === 403);
+  c.innerHTML = `<span>⚠</span><span class="grow"><b>No se pudo conectar con Airtable.</b> ${esAuth ? "Tu token parece inválido o sin acceso a esta base." : "Puedes seguir moderando: todo lo que escribas se guarda en este navegador y podrás guardarlo cuando vuelva la conexión."}<br><span class="mini">Detalle: ${esc(e.message || String(e))}${ultimoError ? " · " + esc(ultimoError) : ""}</span></span>
+    <button class="btn sm" data-act="reintentar">Reintentar</button>
+    <button class="btn sm" data-act="config-token">${esAuth ? "Cambiar token" : "Configurar token"}</button>`;
+}
+
+/* ===================== Configuración del token (pantalla y modal) ===================== */
+function pantallaToken(motivo) {
+  document.getElementById("modal-host").innerHTML = `<div class="overlay">
+    <div class="modal" style="max-width:420px">
+      <h3 style="margin-bottom:8px">Conectar con Airtable</h3>
+      <p>${motivo || "Pega tu token personal de Airtable para leer y guardar sesiones en la base compartida del equipo."}</p>
+      <p class="mini" style="margin:-10px 0 12px">
+        Se crea en <a href="https://airtable.com/create/tokens" target="_blank" rel="noopener">airtable.com/create/tokens</a>
+        con permisos <code>data.records:read</code> y <code>data.records:write</code>, y acceso a la base
+        “EI Tracker · Pruebas de usabilidad”. Se guarda solo en tu navegador; nadie más lo ve.
+      </p>
+      <label class="f"><span class="l">Token (empieza por "pat…")</span>
+        <input type="password" id="token-input" placeholder="patXXXXXXXXXXXXXX.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value="${esc(getToken())}">
+      </label>
+      <div class="row-actions">
+        ${getToken() ? `<button class="btn sm danger" data-act="borrar-token">Borrar token guardado</button>` : ""}
+        <button class="btn sm primary" data-act="guardar-token">Guardar y conectar</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("token-input").focus();
+}
+
+const hijosDe = (idSesion, arr, fid) => arr.filter((r) => val(r, fid) === idSesion);
+
+/* ===================== Vista: Sesiones ===================== */
+function renderSesiones() {
+  const el = document.getElementById("v-sesiones");
+  if (!state.sessions.length) {
+    el.innerHTML = `<div class="empty"><p><b>Todavía no hay sesiones guardadas.</b></p>
+      <p>Cuando guardes una, aparecerá aquí y quedará en Airtable para todo el equipo.</p></div>`;
+    return;
+  }
+  el.innerHTML = state.sessions.map((s) => {
+    const id = val(s, F.ses.id);
+    const abierta = ui.sesionAbierta === s.id;
+    const tar = hijosDe(id, state.tareas, F.tar.idSesion);
+    const hal = hijosDe(id, state.hallazgos, F.hal.idSesion);
+    const ins = hijosDe(id, state.insights, F.ins.idSesion);
+    let cuerpo = "";
+    if (abierta) {
+      cuerpo = `<div class="sess-body">
+        <p class="mini" style="margin-top:10px"><b>Tarea crítica probada:</b> ${esc(val(s, F.ses.varianteTxt) || "—")}
+          · <b>Grabación:</b> ${esc(val(s, F.ses.consentimiento))}${val(s, F.ses.grabacion) ? ` · <a href="${esc(val(s, F.ses.grabacion))}" target="_blank" rel="noopener">enlace</a>` : ""}</p>
+        ${val(s, F.ses.respInicial) ? `<p class="mini"><b>Pregunta inicial:</b> ${esc(val(s, F.ses.respInicial))}</p>` : ""}
+        <div class="stats">
+          <div class="stat"><span class="n">${esc(val(s, F.ses.mSinAyuda) || 0)}</span><span class="l">Sin ayuda</span></div>
+          <div class="stat"><span class="n">${esc(val(s, F.ses.mConAyuda) || 0)}</span><span class="l">Con ayuda</span></div>
+          <div class="stat"><span class="n">${esc(val(s, F.ses.mNoCompl) || 0)}</span><span class="l">No completadas</span></div>
+          <div class="stat"><span class="n">${esc(val(s, F.ses.mFacilidad) || "—")}</span><span class="l">Facilidad 1–5</span></div>
+        </div>
+        <div class="sect">Registro por tarea (${tar.length})</div>
+        ${tar.map((t) => `<div class="obs">
+          <p><span class="pill ${esc(val(t, F.tar.prioridad))}">${esc(val(t, F.tar.prioridad))}</span>
+             <b>${esc(val(t, F.tar.tarea))}</b>
+             <span class="res ${resClase(val(t, F.tar.resultado))}">${esc(val(t, F.tar.resultado) || "sin resultado")}</span></p>
+          ${val(t, F.tar.ruta) ? `<p><b>Ruta:</b> ${esc(val(t, F.tar.ruta))}</p>` : ""}
+          ${val(t, F.tar.bloqueo) ? `<p><b>Se atascó en:</b> ${esc(val(t, F.tar.bloqueo))}</p>` : ""}
+          ${val(t, F.tar.errores) ? `<p><b>Errores:</b> ${esc(val(t, F.tar.errores))}</p>` : ""}
+          ${val(t, F.tar.cita) ? `<p class="quote">“${esc(val(t, F.tar.cita))}”</p>` : ""}
+          ${val(t, F.tar.observacion) ? `<p class="mini">${esc(val(t, F.tar.observacion))}</p>` : ""}
+        </div>`).join("")}
+        ${hal.length ? `<div class="sect">Hallazgos (${hal.length})</div>
+        ${hal.map((h) => `<div class="obs">
+          <p><b>${esc(val(h, F.hal.id))}</b> <span class="badge ${esc(val(h, F.hal.severidad))}"><span class="dot"></span>${esc(val(h, F.hal.severidad))}</span></p>
+          <p>${esc(val(h, F.hal.hallazgo))}</p>
+          ${val(h, F.hal.evidencia) ? `<p class="quote">“${esc(val(h, F.hal.evidencia))}”</p>` : ""}
+          ${val(h, F.hal.recomendacion) ? `<p><b>Recomendación:</b> ${esc(val(h, F.hal.recomendacion))}</p>` : ""}
+        </div>`).join("")}` : ""}
+        ${ins.length ? `<div class="sect">Insights (${ins.length})</div>
+        ${ins.map((n) => `<div class="obs"><p><b>${esc(val(n, F.ins.id))}</b> <span class="pill">Confianza ${esc(val(n, F.ins.confianza))}</span></p>
+          <p>${esc(val(n, F.ins.insight))}</p></div>`).join("")}` : ""}
+        <div class="sect">Cierre y síntesis</div>
+        <div class="mini">
+          ${val(s, F.ses.cConfuso) ? `<p><b>Más confuso:</b> ${esc(val(s, F.ses.cConfuso))}</p>` : ""}
+          ${val(s, F.ses.cSiguiente) ? `<p><b>No supo qué seguía:</b> ${esc(val(s, F.ses.cSiguiente))}</p>` : ""}
+          ${val(s, F.ses.cFaltante) ? `<p><b>Le faltó:</b> ${esc(val(s, F.ses.cFaltante))}</p>` : ""}
+          ${val(s, F.ses.cCambio) ? `<p><b>Cambiaría:</b> ${esc(val(s, F.ses.cCambio))}</p>` : ""}
+          ${val(s, F.ses.sResultado) ? `<p><b>Resultado general:</b> ${esc(val(s, F.ses.sResultado))}</p>` : ""}
+          ${val(s, F.ses.sNecesidad) ? `<p><b>Necesidad principal:</b> ${esc(val(s, F.ses.sNecesidad))}</p>` : ""}
+          ${val(s, F.ses.sDificultad) ? `<p><b>Mayor dificultad:</b> ${esc(val(s, F.ses.sDificultad))}</p>` : ""}
+          ${val(s, F.ses.sRiesgo) ? `<p><b>Riesgo operativo:</b> ${esc(val(s, F.ses.sRiesgo))}</p>` : ""}
+          ${val(s, F.ses.preguntas) ? `<p><b>Preguntas abiertas:</b> ${esc(val(s, F.ses.preguntas))}</p>` : ""}
+        </div>
+        <div class="row-actions">
+          <button class="btn sm" data-act="editar-sesion" data-rec="${s.id}">Editar</button>
+          <button class="btn sm danger" data-act="borrar-sesion" data-rec="${s.id}">Eliminar</button>
+        </div></div>`;
+    }
+    return `<div class="sess">
+      <button class="sess-head" data-act="toggle-sesion" data-rec="${s.id}">
+        <span>${abierta ? "▾" : "▸"}</span>
+        <span class="pill">${esc(val(s, F.ses.rol))}</span>
+        <span class="id">${esc(id)}</span>
+        <span class="meta">${esc(val(s, F.ses.participante))}</span>
+        <span class="meta">${esc(val(s, F.ses.fecha))}</span>
+        <span class="sp"></span>
+        <span class="meta">${tar.length} tareas · ${hal.length} hallazgos</span>
+      </button>${cuerpo}</div>`;
+  }).join("");
+}
+
+/* ===================== Vista: Síntesis ===================== */
+const filtros = { rol: "Todos", severidad: "Todas", q: "" };
+
+function renderSintesis() {
+  const el = document.getElementById("v-sintesis");
+  if (!state.sessions.length) { el.innerHTML = `<div class="empty"><p><b>Sin datos todavía.</b></p><p>La síntesis se construye con las sesiones guardadas.</p></div>`; return; }
+  const porRol = {}; ROLES.forEach((r) => porRol[r] = state.sessions.filter((s) => val(s, F.ses.rol) === r).length);
+  const p0 = state.tareas.filter((t) => val(t, F.tar.prioridad) === "P0" && val(t, F.tar.resultado));
+  const p0ok = p0.filter((t) => val(t, F.tar.resultado) === "Éxito sin ayuda").length;
+  const tasa = p0.length ? Math.round((p0ok / p0.length) * 100) : 0;
+  const noCompl = state.tareas.filter((t) => val(t, F.tar.resultado) === "No completada").length;
+  const altas = state.hallazgos.filter((h) => val(h, F.hal.severidad) === "Alta").length;
+  const fac = state.sessions.map((s) => Number(val(s, F.ses.mFacilidad))).filter((n) => n > 0);
+  const facProm = fac.length ? (fac.reduce((a, b) => a + b, 0) / fac.length).toFixed(1) : "—";
+
+  const mapa = {};
+  state.tareas.forEach((t) => {
+    const k = val(t, F.tar.tarea); if (!k) return;
+    mapa[k] = mapa[k] || { total: 0, no: 0, ayuda: 0, alta: 0 };
+    mapa[k].total++;
+    if (val(t, F.tar.resultado) === "No completada") mapa[k].no++;
+    if (val(t, F.tar.resultado) === "Éxito con ayuda") mapa[k].ayuda++;
+  });
+  state.hallazgos.forEach((h) => { const k = val(h, F.hal.tarea); if (k && mapa[k] && val(h, F.hal.severidad) === "Alta") mapa[k].alta++; });
+  const orden = Object.entries(mapa).sort((a, b) => (b[1].no + b[1].alta) - (a[1].no + a[1].alta) || b[1].total - a[1].total);
+  const maxT = Math.max(1, ...orden.map(([, v]) => v.total));
+
+  const hF = state.hallazgos.filter((h) => {
+    if (filtros.rol !== "Todos" && val(h, F.hal.rol) !== filtros.rol) return false;
+    if (filtros.severidad !== "Todas" && val(h, F.hal.severidad) !== filtros.severidad) return false;
+    if (filtros.q.trim()) {
+      const hay = [F.hal.hallazgo, F.hal.evidencia, F.hal.impacto, F.hal.recomendacion, F.hal.tarea, F.hal.idSesion].map((f) => val(h, f)).join(" ").toLowerCase();
+      if (!hay.includes(filtros.q.toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  el.innerHTML = `
+  <div class="stats">
+    <div class="stat"><span class="n">${state.sessions.length}</span><span class="l">Sesiones</span></div>
+    <div class="stat"><span class="n">${tasa}%</span><span class="l">Éxito P0 sin ayuda</span></div>
+    <div class="stat"><span class="n">${noCompl}</span><span class="l">No completadas</span></div>
+    <div class="stat" style="border-color:var(--alta-dot)"><span class="n" style="color:var(--alta-fg)">${altas}</span><span class="l">Hallazgos altos</span></div>
+    <div class="stat"><span class="n">${state.insights.length}</span><span class="l">Insights</span></div>
+    <div class="stat"><span class="n">${facProm}</span><span class="l">Facilidad media</span></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Distribución por rol</h3><span class="eyebrow">Reviewer es el perfil principal</span></div>
+    ${ROLES.map((r) => `<div class="bar-row"><span>${r}</span>
+      <div class="bar-track"><div class="bar" style="width:${state.sessions.length ? porRol[r] / state.sessions.length * 100 : 0}%;background:var(--accent)"></div></div>
+      <span class="bar-num">${porRol[r]} sesión${porRol[r] === 1 ? "" : "es"}</span></div>`).join("")}
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Tareas con más fricción</h3><span class="eyebrow">No completadas + hallazgos altos</span></div>
+    ${orden.slice(0, 10).map(([k, v]) => `<div class="bar-row"><span>${esc(k)}</span>
+      <div class="bar-track"><div class="bar" style="width:${v.total / maxT * 100}%;background:${v.no || v.alta ? "var(--alta-dot)" : v.ayuda ? "var(--media-dot)" : "var(--baja-dot)"}"></div></div>
+      <span class="bar-num">${v.total} obs.${v.no ? " · " + v.no + " sin completar" : ""}${v.alta ? " · " + v.alta + " alta" : ""}</span></div>`).join("") || `<p class="mini">Sin tareas registradas.</p>`}
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Hallazgos</h3><span class="eyebrow">${hF.length} de ${state.hallazgos.length}</span></div>
+    <div class="filters">
+      <input class="search" type="text" id="f-q" placeholder="Buscar…" value="${esc(filtros.q)}">
+      <select id="f-rol">${opts(["Todos", ...ROLES], filtros.rol)}</select>
+      <select id="f-sev">${opts(["Todas", ...SEVERIDADES], filtros.severidad)}</select>
+      <button class="btn sm" data-act="export-hallazgos">Exportar CSV</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Sesión</th><th>Rol</th><th>Tarea</th><th>Sev.</th><th>Hallazgo</th><th>Recomendación</th></tr></thead>
+      <tbody>${hF.map((h) => `<tr><td>${esc(val(h, F.hal.idSesion))}</td>
+        <td><span class="pill">${esc(val(h, F.hal.rol))}</span></td>
+        <td>${esc(val(h, F.hal.tarea))}</td>
+        <td><span class="badge ${esc(val(h, F.hal.severidad))}"><span class="dot"></span>${esc(val(h, F.hal.severidad))}</span></td>
+        <td class="w">${esc(val(h, F.hal.hallazgo))}</td><td class="w">${esc(val(h, F.hal.recomendacion))}</td></tr>`).join("")
+        || `<tr><td colspan="6" class="mini">No hay hallazgos con estos filtros.</td></tr>`}</tbody></table></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Resumen final del estudio</h3></div>
+    <div class="tbl-wrap"><table><tbody>
+      <tr><th>Sesiones</th><td>${state.sessions.length} · ${ROLES.map((r) => `${r}: ${porRol[r]}`).join(" · ")}</td></tr>
+      <tr><th>Éxito tareas P0</th><td>${tasa}% sin ayuda (${p0ok} de ${p0.length})</td></tr>
+      <tr><th>Principales necesidades</th><td>${state.insights.slice(0, 5).map((n) => esc(val(n, F.ins.necesidad))).filter(Boolean).join(" · ") || "—"}</td></tr>
+      <tr><th>Principales barreras</th><td>${state.insights.slice(0, 5).map((n) => esc(val(n, F.ins.barrera))).filter(Boolean).join(" · ") || "—"}</td></tr>
+      <tr><th>Hallazgos altos por rol</th><td>${ROLES.map((r) => `${r}: ${state.hallazgos.filter((h) => val(h, F.hal.rol) === r && val(h, F.hal.severidad) === "Alta").length}`).join(" · ")}</td></tr>
+    </tbody></table></div>
+  </div>`;
+
+  const q = document.getElementById("f-q");
+  if (q) {
+    q.addEventListener("input", (e) => { filtros.q = e.target.value; const p = e.target.selectionStart; renderSintesis(); const n = document.getElementById("f-q"); n.focus(); n.setSelectionRange(p, p); });
+    document.getElementById("f-rol").addEventListener("change", (e) => { filtros.rol = e.target.value; renderSintesis(); });
+    document.getElementById("f-sev").addEventListener("change", (e) => { filtros.severidad = e.target.value; renderSintesis(); });
+  }
+}
+
+/* ===================== Vista: Matriz ===================== */
+function renderMatriz() {
+  const el = document.getElementById("v-matriz");
+  if (!state.insights.length) { el.innerHTML = `<div class="empty"><p><b>Sin insights todavía.</b></p><p>La matriz agrupa los insights por tema para ver qué se repite entre roles.</p></div>`; return; }
+  const g = {};
+  state.insights.forEach((n) => {
+    const k = (val(n, F.ins.tema) || val(n, F.ins.necesidad) || "Sin tema").trim();
+    g[k] = g[k] || { insights: [], roles: { Reviewer: 0, KLD: 0, Consultant: 0 }, sesiones: new Set(), conf: [] };
+    g[k].insights.push(n);
+    const r = val(n, F.ins.rol); if (g[k].roles[r] !== undefined) g[k].roles[r]++;
+    g[k].sesiones.add(val(n, F.ins.idSesion)); g[k].conf.push(val(n, F.ins.confianza));
+  });
+  const conf = (a) => a.includes("Alta") ? "Alta" : a.includes("Media") ? "Media" : "Baja";
+  el.innerHTML = `<div class="card">
+    <div class="card-head"><h3>Matriz de evidencia</h3><span class="eyebrow">Un insight se refuerza si aparece en varias sesiones o roles</span></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Tema</th><th>Rev.</th><th>KLD</th><th>Cons.</th><th>Sesiones</th><th>Evidencia</th><th>Confianza</th></tr></thead>
+      <tbody>${Object.entries(g).sort((a, b) => b[1].insights.length - a[1].insights.length).map(([k, v]) => {
+        const evid = state.hallazgos.filter((h) => v.sesiones.has(val(h, F.hal.idSesion))).length;
+        return `<tr><td class="w"><b>${esc(k)}</b><br><span class="mini">${esc(val(v.insights[0], F.ins.insight))}</span></td>
+          <td>${v.roles.Reviewer || "—"}</td><td>${v.roles.KLD || "—"}</td><td>${v.roles.Consultant || "—"}</td>
+          <td class="mini">${[...v.sesiones].join(", ")}</td><td>${evid}</td>
+          <td><span class="badge ${conf(v.conf)}"><span class="dot"></span>${conf(v.conf)}</span></td></tr>`;
+      }).join("")}</tbody></table></div>
+  </div>`;
+}
+
+/* ===================== Vista: Guion ===================== */
+function renderGuion() {
+  document.getElementById("v-guion").innerHTML = `
+  <div class="card">
+    <div class="card-head"><h3>Estructura de la sesión</h3><span class="eyebrow">Máximo 30 minutos</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Momento</th><th>Tiempo</th><th>Contenido</th></tr></thead>
+      <tbody>${ESTRUCTURA.map(([a, b, c]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td>${esc(c)}</td></tr>`).join("")}</tbody></table></div>
+    <p class="mini" style="margin-top:9px"><b>Regla de alcance:</b> cada participante hace orientación, navegación por Tracker EI y detalle, y un único happy path P0.</p>
+  </div>
+  ${ROLES.map((rol) => {
+    const g = GUION[rol];
+    const cr = ["A", "B", "C"].map((v) => g.criticas[v]).filter((b, i, a) => b && a.findIndex((x) => x.nombre === b.nombre) === i);
+    return `<div class="card">
+      <div class="card-head"><h3>${rol}${g.principal ? " · perfil principal" : ""}</h3></div>
+      <p class="mini">${esc(g.objetivo)}</p>
+      <div class="sect">Tareas y prioridades</div>
+      <div class="tbl-wrap"><table><thead><tr><th style="width:90px">Prioridad</th><th>Tarea</th><th>Resultado esperado</th></tr></thead>
+        <tbody>${g.tareas.map(([p, t, r]) => `<tr><td><span class="pill ${esc(p)}">${esc(p)}</span></td><td><b>${esc(t)}</b></td><td>${esc(r)}</td></tr>`).join("")}</tbody></table></div>
+      <div class="sect">Happy paths</div>
+      ${g.happyPaths.map(([n, p]) => `<div class="hp"><span class="n">${esc(n)}</span><span class="p">${esc(p)}</span></div>`).join("")}
+      <div class="sect">Guion</div>
+      ${[g.orientacion, g.navegacion, ...cr].map((b) => `<div class="blk">
+        <div class="blk-head"><span class="pill ${esc(b.prioridad)}">${esc(b.prioridad)}</span>
+          <span class="name">${esc(b.nombre)}</span><span class="dur">${esc(b.duracion)}</span></div>
+        <div class="script"><p><b>Contexto:</b> <span class="q">«${esc(b.contexto)}»</span></p>
+          <p><b>Tarea:</b> <span class="q">«${esc(b.tarea)}»</span></p>
+          <p><b>Observar:</b></p><ul>${b.observar.map((o) => `<li>${esc(o)}</li>`).join("")}</ul>
+          ${b.sondeo.length ? `<p style="margin-top:6px"><b>Sondeo:</b> ${b.sondeo.map((s) => `<span class="q">«${esc(s)}»</span>`).join(" · ")}</p>` : ""}
+        </div></div>`).join("")}
+    </div>`;
+  }).join("")}
+  <div class="card">
+    <div class="card-head"><h3>Matriz general de permisos</h3></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Tarea</th><th>KLD</th><th>Reviewer</th><th>Consultant</th></tr></thead>
+      <tbody>${PERMISOS.map((r) => `<tr><td><b>${esc(r[0])}</b></td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td></tr>`).join("")}</tbody></table></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Niveles de prioridad</h3></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Nivel</th><th>Definición</th><th>Uso</th></tr></thead>
+      <tbody>${PRIORIDADES.map(([a, b, c]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td>${esc(c)}</td></tr>`).join("")}</tbody></table></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Datos de prueba necesarios</h3></div>
+    <ul class="clean">${DATOS_PRUEBA.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Criterio de severidad</h3></div>
+    <div class="tbl-wrap"><table><tbody>${SEVERIDAD_CRITERIO.map(([s, d]) => `<tr><th style="width:90px"><span class="badge ${s}"><span class="dot"></span>${s}</span></th><td>${esc(d)}</td></tr>`).join("")}</tbody></table></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Riesgos y decisiones pendientes</h3></div>
+    <ol class="clean">${RIESGOS.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Referencias de diseño</h3></div>
+    <ul class="clean">${FIGMA.map(([n, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a></li>`).join("")}</ul>
+  </div>`;
+}
+
+/* ===================== Chuleta ===================== */
+function renderChuleta() {
+  document.getElementById("chuleta-host").innerHTML = ui.chuleta ? `<div class="chuleta">
+    <h4>Di esto</h4><ul>${NEUTRALES_USAR.map((s) => `<li>«${esc(s)}»</li>`).join("")}</ul>
+    <h4>No digas esto</h4><ul class="no">${NEUTRALES_EVITAR.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
+    <h4>Si se pasa de tiempo</h4><ol style="margin:0;padding-left:16px;font-size:12.5px">${TIEMPO_REGLA.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+    <h4>Recuerda</h4><ul><li>Evaluamos la plataforma, no a la persona.</li><li>Si se bloquea, espera 30–60 s antes de ayudar.</li><li>Si ayudas, marca «Éxito con ayuda».</li></ul>
+  </div>` : "";
+}
+
+/* ===================== Exportación ===================== */
+function mostrarCSV(titulo, csv) {
+  const host = document.getElementById("modal-host");
+  host.innerHTML = `<div class="overlay" data-act="cerrar-modal"><div class="modal" style="max-width:640px" onclick="event.stopPropagation()">
+    <p><b>${esc(titulo)}</b> — copia el contenido o descárgalo.</p>
+    <textarea rows="12" style="font-family:'IBM Plex Mono',monospace;font-size:11px">${esc(csv)}</textarea>
+    <div class="row-actions"><button class="btn sm" data-act="cerrar-modal">Cerrar</button>
+      <button class="btn sm primary" data-act="descargar-csv">Descargar .csv</button></div></div></div>`;
+  host._csv = csv; host._nombre = titulo;
+}
+const aCSV = (h, rows) => [h.join(",")].concat(rows.map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))).join("\n");
+
+/* ===================== Navegación y eventos ===================== */
+function irA(tab) {
+  state.tab = tab;
+  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll(".view").forEach((v) => v.classList.add("hide"));
+  document.getElementById("v-" + tab).classList.remove("hide");
+  if (tab === "registrar") renderRegistrar();
+  if (tab === "sesiones") renderSesiones();
+  if (tab === "sintesis") renderSintesis();
+  if (tab === "matriz") renderMatriz();
+  if (tab === "guion") renderGuion();
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+
+document.addEventListener("input", (e) => {
+  const p = e.target.dataset && e.target.dataset.path;
+  if (!p) return;
+  setPath(draft, p, e.target.value);
+  guardarBorrador();
+});
+document.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.dataset && t.dataset.obs) {
+    const [i, j] = t.dataset.obs.split(".").map(Number);
+    draft.tareas[i].observados = draft.tareas[i].observados || [];
+    draft.tareas[i].observados[j] = t.checked;
+    guardarBorrador();
+    t.closest(".chk").classList.toggle("on", t.checked);
+    return;
+  }
+  const p = t.dataset && t.dataset.path;
+  if (!p) return;
+  setPath(draft, p, t.value);
+  guardarBorrador();
+  if (p === "ficha.rol") { sincronizarTareas(); guardarBorrador(); renderRegistrar(); }
+});
+
+document.addEventListener("click", async (e) => {
+  const tab = e.target.closest(".tab");
+  if (tab) { irA(tab.dataset.tab); return; }
+  const b = e.target.closest("[data-act]");
+  if (!b) return;
+  const a = b.dataset.act;
+
+  if (a === "toggle-paso") { ui.pasoAbierto = ui.pasoAbierto === b.dataset.paso ? null : b.dataset.paso; renderPasos(); }
+  else if (a === "siguiente") {
+    const i = PASOS.findIndex((p) => p.id === b.dataset.paso);
+    const act = timers[b.dataset.paso]; if (act && act.desde) { act.ms += Date.now() - act.desde; act.desde = null; }
+    ui.pasoAbierto = PASOS[Math.min(i + 1, PASOS.length - 1)].id;
+    renderPasos();
+    const el = document.querySelector(".paso.open"); if (el) try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (err) {}
+  }
+  else if (a === "crono") { const t = crono(b.dataset.id); if (t.desde) { t.ms += Date.now() - t.desde; t.desde = null; } else t.desde = Date.now(); renderPasos(); }
+  else if (a === "crono-reset") { timers[b.dataset.id] = { ms: 0, desde: null }; renderPasos(); }
+  else if (a === "mas-detalle") { ui.masDetalle[b.dataset.k] = !ui.masDetalle[b.dataset.k]; renderPasos(); }
+  else if (a === "set-res") { draft.tareas[Number(b.dataset.i)].resultado = b.dataset.v; guardarBorrador(); renderPasos(); }
+  else if (a === "set-cons") { draft.ficha.consentimiento = b.dataset.v; guardarBorrador(); renderPasos(); }
+  else if (a === "set-num") { draft.metricas[b.dataset.k] = b.dataset.v; guardarBorrador(); renderPasos(); }
+  else if (a === "set-sev") { draft.hallazgos[Number(b.dataset.i)].severidad = b.dataset.v; guardarBorrador(); renderPasos(); }
+  else if (a === "set-conf") { draft.insights[Number(b.dataset.i)].confianza = b.dataset.v; guardarBorrador(); renderPasos(); }
+  else if (a === "set-critica") { draft.ficha.critica = b.dataset.v; sincronizarTareas(); guardarBorrador(); renderRegistrar(); }
+  else if (a === "add-hallazgo") { draft.hallazgos.push(nuevoHallazgo(draft.hallazgos.length + 1)); guardarBorrador(); renderPasos(); }
+  else if (a === "del-hallazgo") { draft.hallazgos.splice(Number(b.dataset.i), 1); guardarBorrador(); renderPasos(); }
+  else if (a === "add-insight") { draft.insights.push(nuevoInsight(draft.insights.length + 1)); guardarBorrador(); renderPasos(); }
+  else if (a === "del-insight") { draft.insights.splice(Number(b.dataset.i), 1); guardarBorrador(); renderPasos(); }
+  else if (a === "guardar") { await guardarSesion(); }
+  else if (a === "limpiar" || a === "cancelar-edicion") {
+    draft = nuevoDraft(); sincronizarTareas(); guardarBorrador();
+    Object.keys(timers).forEach((k) => delete timers[k]);
+    ui.pasoAbierto = "apertura"; renderRegistrar();
+  }
+  else if (a === "toggle-sesion") { ui.sesionAbierta = ui.sesionAbierta === b.dataset.rec ? null : b.dataset.rec; renderSesiones(); }
+  else if (a === "editar-sesion") { cargarEnFormulario(b.dataset.rec); irA("registrar"); }
+  else if (a === "borrar-sesion") { confirmarBorrado(b.dataset.rec); }
+  else if (a === "confirmar-borrado") { await borrarSesion(b.dataset.rec); }
+  else if (a === "cerrar-modal") { document.getElementById("modal-host").innerHTML = ""; }
+  else if (a === "chuleta") { ui.chuleta = !ui.chuleta; renderChuleta(); }
+  else if (a === "reintentar") {
+    document.getElementById("conn").innerHTML = `<span class="spin"></span><span class="grow">Reintentando…</span>`;
+    document.getElementById("conn").className = "note";
+    try { await cargarDatos(); toast("Conectado"); } catch (err) { bannerError(err); }
+  }
+  else if (a === "config-token") { pantallaToken(); }
+  else if (a === "borrar-token") { borrarToken(); document.getElementById("modal-host").innerHTML = ""; bannerError({ sinToken: true }); }
+  else if (a === "guardar-token") {
+    const v = document.getElementById("token-input").value.trim();
+    if (!v) { toast("Pega un token antes de guardar", true); return; }
+    setToken(v);
+    document.getElementById("modal-host").innerHTML = "";
+    document.getElementById("conn").innerHTML = `<span class="spin"></span><span class="grow">Conectando…</span>`;
+    document.getElementById("conn").className = "note";
+    try { await cargarDatos(); toast("Conectado a Airtable"); } catch (err) { bannerError(err); }
+  }
+  else if (a === "descargar-csv") {
+    const host = document.getElementById("modal-host");
+    try {
+      const blob = new Blob(["﻿" + host._csv], { type: "text/csv;charset=utf-8;" });
+      const el = document.createElement("a");
+      el.href = URL.createObjectURL(blob);
+      el.download = (host._nombre || "export").toLowerCase().replace(/\s+/g, "-") + ".csv";
+      document.body.appendChild(el); el.click(); el.remove();
+    } catch (err) { toast("La descarga está bloqueada; copia el texto", true); }
+  }
+  else if (a === "export-hallazgos") {
+    mostrarCSV("Hallazgos EI Tracker", aCSV(["sesion", "rol", "tarea", "severidad", "hallazgo", "evidencia", "impacto", "recomendacion"],
+      state.hallazgos.map((h) => [val(h, F.hal.idSesion), val(h, F.hal.rol), val(h, F.hal.tarea), val(h, F.hal.severidad), val(h, F.hal.hallazgo), val(h, F.hal.evidencia), val(h, F.hal.impacto), val(h, F.hal.recomendacion)])));
+  }
+});
+
+function cargarEnFormulario(recId) {
+  const s = state.sessions.find((x) => x.id === recId);
+  if (!s) return;
+  const id = val(s, F.ses.id);
+  const tar = hijosDe(id, state.tareas, F.tar.idSesion);
+  const hal = hijosDe(id, state.hallazgos, F.hal.idSesion);
+  const ins = hijosDe(id, state.insights, F.ins.idSesion);
+  draft = nuevoDraft();
+  draft.recId = recId; draft.idSesion = id;
+  draft.childIds = { tar: tar.map((r) => r.id), hal: hal.map((r) => r.id), ins: ins.map((r) => r.id) };
+  draft.ficha = {
+    fecha: val(s, F.ses.fecha) || "", hora: val(s, F.ses.hora), rol: val(s, F.ses.rol) || "Reviewer",
+    participante: val(s, F.ses.participante), critica: val(s, F.ses.variante) || "A",
+    consentimiento: val(s, F.ses.consentimiento) || "Sí", grabacion: val(s, F.ses.grabacion),
+    incidencias: val(s, F.ses.incidencias)
+  };
+  draft.respInicial = val(s, F.ses.respInicial);
+  sincronizarTareas();
+  const refs = bloquesDeSesion(draft.ficha.rol, draft.ficha.critica);
+  if (tar.length) {
+    draft.tareas = tar.map((t) => {
+      const nombre = val(t, F.tar.tarea);
+      const ref = refs.find((r) => r.nombre === nombre);
+      return {
+        bloque: val(t, F.tar.bloque) || "Tarea adicional", tarea: nombre, prioridad: val(t, F.tar.prioridad) || "P1",
+        resultado: val(t, F.tar.resultado), tiempo: val(t, F.tar.tiempo), ruta: val(t, F.tar.ruta),
+        primerClic: val(t, F.tar.primerClic), errores: val(t, F.tar.errores), bloqueo: val(t, F.tar.bloqueo),
+        ayuda: val(t, F.tar.ayuda), expectativa: val(t, F.tar.expectativa), interpreto: val(t, F.tar.interpreto),
+        cita: val(t, F.tar.cita), observacion: val(t, F.tar.observacion), observados: [], _ref: ref
+      };
+    });
+  }
+  draft.metricas = { errores: val(s, F.ses.mErrores), retrocesos: val(s, F.ses.mRetrocesos), facilidad: val(s, F.ses.mFacilidad), confianza: val(s, F.ses.mConfianza) };
+  draft.cierre = { confuso: val(s, F.ses.cConfuso), siguiente: val(s, F.ses.cSiguiente), faltante: val(s, F.ses.cFaltante), cambio: val(s, F.ses.cCambio) };
+  draft.sintesis = { objetivo: val(s, F.ses.sObjetivo), resultado: val(s, F.ses.sResultado), necesidad: val(s, F.ses.sNecesidad), dificultad: val(s, F.ses.sDificultad), claro: val(s, F.ses.sClaro), riesgo: val(s, F.ses.sRiesgo) };
+  draft.preguntas = val(s, F.ses.preguntas);
+  draft.hallazgos = hal.map((h, i) => ({
+    codigo: (String(val(h, F.hal.id)).split("·").pop() || "").trim() || "H-" + String(i + 1).padStart(2, "0"),
+    tarea: val(h, F.hal.tarea), hallazgo: val(h, F.hal.hallazgo), evidencia: val(h, F.hal.evidencia),
+    impacto: val(h, F.hal.impacto), severidad: val(h, F.hal.severidad) || "Media", recomendacion: val(h, F.hal.recomendacion)
+  }));
+  draft.insights = ins.map((n, i) => ({
+    codigo: (String(val(n, F.ins.id)).split("·").pop() || "").trim() || "I-" + String(i + 1).padStart(2, "0"),
+    necesidad: val(n, F.ins.necesidad), motivacion: val(n, F.ins.motivacion), barrera: val(n, F.ins.barrera),
+    consecuencia: val(n, F.ins.consecuencia), confianza: val(n, F.ins.confianza) || "Media", tema: val(n, F.ins.tema)
+  }));
+  ui.pasoAbierto = "despues";
+  guardarBorrador();
+}
+
+function confirmarBorrado(recId) {
+  const s = state.sessions.find((x) => x.id === recId);
+  document.getElementById("modal-host").innerHTML = `<div class="overlay" data-act="cerrar-modal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <p>¿Eliminar la sesión <b>${esc(val(s, F.ses.id))}</b> con sus tareas, hallazgos e insights? También se borra en Airtable.</p>
+      <div class="row-actions"><button class="btn sm" data-act="cerrar-modal">Cancelar</button>
+        <button class="btn sm primary" style="background:var(--alta-dot);border-color:var(--alta-dot)" data-act="confirmar-borrado" data-rec="${recId}">Eliminar</button>
+      </div></div></div>`;
+}
+
+async function borrarSesion(recId) {
+  const s = state.sessions.find((x) => x.id === recId);
+  const id = val(s, F.ses.id);
+  document.getElementById("modal-host").innerHTML = "";
+  try {
+    const gr = [
+      [T.tar, hijosDe(id, state.tareas, F.tar.idSesion).map((r) => r.id)],
+      [T.hal, hijosDe(id, state.hallazgos, F.hal.idSesion).map((r) => r.id)],
+      [T.ins, hijosDe(id, state.insights, F.ins.idSesion).map((r) => r.id)]
+    ];
+    for (const [tid, arr] of gr) if (arr.length) await deleteRecords(tid, arr);
+    await deleteRecords(T.ses, [recId]);
+    ui.sesionAbierta = null;
+    await cargarDatos(); renderSesiones(); toast("Sesión eliminada");
+  } catch (e) { toast("No se pudo eliminar: " + e.message, true); }
+}
+
+/* ===================== Arranque ===================== */
+(async function init() {
+  cargarBorrador();
+  renderRegistrar();
+  if (!getToken()) {
+    bannerError({ sinToken: true });
+    pantallaToken("Pega tu token personal de Airtable para leer y guardar las sesiones de todo el equipo. Solo hace falta hacerlo una vez por navegador.");
+  } else {
+    try { await cargarDatos(); } catch (e) { bannerError(e); }
+  }
+  renderRegistrar();
+})();
+
+</script>
+</body>
+</html>
