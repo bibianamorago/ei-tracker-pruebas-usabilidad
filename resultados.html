@@ -231,14 +231,14 @@ ul.clean li { margin-bottom:3px; }
   <div id="fecha" class="aviso"></div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="sintesis">Síntesis</button>
+    <button class="tab active" data-tab="guion">Guion completo</button>
+    <button class="tab" data-tab="sintesis">Síntesis</button>
     <button class="tab" data-tab="matriz">Matriz de evidencia</button>
-    <button class="tab" data-tab="guion">Guion completo</button>
   </div>
 
-  <div id="v-sintesis" class="view"></div>
+  <div id="v-guion" class="view"></div>
+  <div id="v-sintesis" class="view hide"></div>
   <div id="v-matriz" class="view hide"></div>
-  <div id="v-guion" class="view hide"></div>
 </div>
 <script src="guion.js"></script>
 <script>
@@ -426,11 +426,14 @@ async function cargar() {
     aviso.innerHTML = `<b>Datos actualizados al ${esc(fechaTexto(DATOS.generado))}.</b> Resumen agregado; el detalle vive en Airtable.`;
   } catch (e) {
     DATOS = null;
-    aviso.innerHTML = `<b>Aún no hay resultados publicados.</b> El guion completo sí está disponible en su pestaña.`;
+    aviso.innerHTML = `<b>Aún no hay resultados publicados.</b> El guion completo sí está disponible en esta pestaña.`;
   }
+  // La síntesis se prepara aunque esté oculta, para que el cambio de pestaña sea instantáneo.
   renderSintesis();
 }
 
+// El guion es la pestaña por defecto: se pinta ya, sin esperar al snapshot.
+renderGuion();
 cargar();
 </script>
 </body>
