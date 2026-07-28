@@ -39,11 +39,12 @@ No es una recomendación de estilo. Es lo que permite que, si algún día hay qu
 
 ## Qué hace
 
-- **Registrar sesión**: formulario guiado en 6 pasos (Apertura, Orientación, Navegación común, Tarea crítica, Cierre, Después de la sesión) con el guion incrustado — qué leer en voz alta, checklist de qué observar, cronómetro por bloque y botones grandes para marcar el resultado.
+- **Registrar sesión**: formulario guiado con el guion incrustado — qué leer en voz alta, checklist de qué observar, cronómetro por bloque y botones grandes para marcar el resultado. Cada sesión recorre Apertura, Orientación, Navegación común, **todas las tareas críticas del rol**, Cierre y Después de la sesión. El número de pasos depende del rol.
+- **Añadir tareas sobre la marcha**: si en la sesión pruebas algo que no está en el guion, el botón **"+ Añadir tarea"** crea un bloque más con su nombre, prioridad y consigna. Se guarda en Airtable como "Tarea adicional".
 - **Sesiones**: lista de todo lo registrado por el equipo, con detalle completo por sesión.
 - **Síntesis**: métricas agregadas (tasa de éxito de tareas P0, tareas con más fricción, hallazgos filtrables, exportación a CSV).
 - **Matriz de evidencia**: agrupa insights por tema para ver qué se repite entre roles y sesiones.
-- **Guion completo**: referencia de todas las tareas, happy paths, matriz de permisos y datos de prueba necesarios, para consultar durante la moderación.
+- **Guion completo**: referencia para consultar durante la moderación, **con una pestaña por perfil** (Reviewer, KLD, Consultant). Cada pestaña trae la estructura de la sesión con los tiempos sumados, las tareas y prioridades, los happy paths y el guion completo. Debajo están la matriz de permisos, los datos de prueba y los riesgos, comunes a los tres perfiles.
 
 Un botón flotante **"Chuleta del facilitador"** resume las frases neutrales a usar/evitar y qué hacer si alguien se bloquea en una tarea.
 

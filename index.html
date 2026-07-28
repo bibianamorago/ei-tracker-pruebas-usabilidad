@@ -73,6 +73,10 @@ button { font-family:'IBM Plex Mono',monospace; cursor:pointer; }
 .pill.P0 { background:var(--alta-bg); color:var(--alta-fg); border-color:var(--alta-dot); }
 .pill.P1 { background:var(--media-bg); color:var(--media-fg); border-color:var(--media-dot); }
 .pill.P2 { background:var(--accent-soft); color:var(--accent); }
+.pill.oculta { background:transparent; color:var(--muted); border-style:dashed; }
+.fila-oculta { opacity:.5; }
+.fila-oculta b { text-decoration:line-through; }
+.blk.oculto { opacity:.62; border-style:dashed; }
 .badge { display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace;
   font-size:10.5px; padding:2px 8px; border-radius:9px; }
 .badge .dot { width:6px; height:6px; border-radius:50%; }
@@ -283,6 +287,8 @@ const F = {
 
 const ROLES = ["Reviewer", "KLD", "Consultant"];
 const RESULTADOS = ["Éxito sin ayuda", "Éxito con ayuda", "No completada"];
+/* Coincide con las opciones del campo Prioridad en Airtable. */
+const PRIORIDAD_OPCIONES = ["P0", "P1", "P2", "Informativa", "Restringida"];
 const SEVERIDADES = ["Alta", "Media", "Baja"];
 const CONFIANZAS = ["Alta", "Media", "Baja"];
 
@@ -307,17 +313,9 @@ const PERMISOS = [
 const PRIORIDADES = [
   ["P0 — Crítica", "Responsabilidad central del rol. Un fallo bloquea trabajo operativo.", "Debe probarse como tarea principal."],
   ["P1 — Frecuente", "Permite comprender, localizar o priorizar trabajo.", "Puede formar parte del inicio de una tarea P0."],
-  ["P2 — Ocasional", "Es necesaria, pero sucede con menor frecuencia o necesita una sesión específica.", "Probar como variante en otra sesión."],
+  ["P2 — Ocasional", "Es necesaria, pero sucede con menor frecuencia o necesita una sesión específica.", "Añadirla como tarea extra si sobra tiempo."],
   ["Informativa", "Ayuda a comprender el estado del sistema sin modificar datos.", "Observar comprensión; no tratar como tarea aislada."],
   ["Restringida", "No corresponde al rol.", "Verificar que no aparezca como acción disponible."]
-];
-
-const ESTRUCTURA = [
-  ["Apertura", "3 min", "Contexto, consentimiento y pregunta inicial."],
-  ["Orientación", "4 min", "Comprender la página de inicio y las prioridades."],
-  ["Navegación común", "5 min", "Filtrar, localizar y abrir una EI."],
-  ["Tarea crítica del rol", "13 min", "Completar un único happy path P0."],
-  ["Cierre", "5 min", "Evaluación y preguntas finales."]
 ];
 
 const DATOS_PRUEBA = [
@@ -325,7 +323,7 @@ const DATOS_PRUEBA = [
   "Una EI del sector marcada automáticamente como Pending update.",
   "Una EI del sector con información desactualizada, sin estado Pending update.",
   "Una EI completada con histórico y publicaciones.",
-  "Una combinación de filtros sin resultados.",
+  "Datos suficientes para que los filtros de sector y país devuelvan resultados distintos.",
   "Datos válidos para reportar o crear una nueva EI.",
   "Una posible EI duplicada para comprobar prevención de errores."
 ];
@@ -400,41 +398,36 @@ const GUION = {
       observar:["Uso de filtros, búsqueda y tabla.","Comprensión de filtros activos.","Capacidad de distinguir detalle, histórico y acciones disponibles.","Conservación del contexto al volver."],
       sondeo:[]
     },
-    criticas: {
-      A: {
-        nombre:"Tarea crítica A — EI marcada Pending update", duracion:"13 min", prioridad:"P0",
+    criticas: [
+      {
+        nombre:"Atender una EI marcada Pending update", duracion:"10 min", prioridad:"P0",
         contexto:"El sistema ha marcado una EI de tu sector como Pending update.",
         tarea:"Encuentra la EI pendiente, revisa su información, actualízala y completa el proceso.",
         observar:["Descubrimiento de la EI marcada Pending update.","Comprensión de por qué requiere atención y de su fecha límite, si existe.","Diferenciación entre información editable y solo lectura.","Validaciones y conservación de datos.","Comprensión de la confirmación final.","Si entiende que la EI ya no debe aparecer como pendiente y que KLD podrá ver el estado actualizado."],
         sondeo:["¿Cómo comprobarías que la actualización quedó guardada y que la EI ya no está pendiente?"]
       },
-      B: {
-        nombre:"Tarea crítica B — actualización autónoma", duracion:"13 min", prioridad:"P0",
+      {
+        nombre:"Actualización autónoma de una EI", duracion:"10 min", prioridad:"P0",
         contexto:"Has recibido información nueva sobre una EI de tu sector. La EI no está marcada como Pending update.",
         tarea:"Localiza la EI, actualiza su información y verifica que el cambio quedó registrado.",
         observar:["Si entiende que puede iniciar una actualización aunque la EI no esté marcada como pendiente.","Descubrimiento de la acción de editar.","Claridad de campos, estados y guardado.","Prevención de pérdida de cambios.","Confirmación e histórico."],
         sondeo:["¿Qué te confirma que el cambio fue guardado correctamente?"]
       },
-      C: {
-        nombre:"Tarea crítica C — comparación sector/global + actualización autónoma", duracion:"13 min", prioridad:"P0",
-        contexto:"Antes de actualizar una EI de tu sector quieres comparar cómo va tu sector respecto al conjunto del banco. La EI no está marcada como Pending update.",
-        tarea:"Cambia a la vista general, aplica los filtros que necesites para comparar, vuelve al contexto de tu sector, localiza la EI y actualiza su información.",
-        observar:["Si encuentra la vista general y entiende que sigue siendo consulta.","Uso y limpieza de filtros sin perder el contexto del sector.","Si sabe volver a su ámbito después de comparar.","Descubrimiento de la acción de editar sin estado Pending update.","Confirmación e histórico."],
-        sondeo:["¿Qué te confirma que volviste al contexto de tu sector?","¿Qué te confirma que el cambio fue guardado correctamente?"]
+      {
+        nombre:"Comparación sector/global", duracion:"8 min", prioridad:"P0",
+        contexto:"Quieres saber cómo va tu sector respecto al conjunto del banco.",
+        tarea:"Cambia a la vista general, aplica los filtros que necesites para comparar tu sector con el total y vuelve al contexto de tu sector.",
+        observar:["Si encuentra la vista general y entiende que sigue siendo consulta, no edición.","Qué compara y con qué referencia (sector vs. banco, periodo, estado).","Uso y limpieza de filtros sin perder el contexto del sector.","Si sabe volver a su ámbito después de comparar.","Si la comparación le sirve para decidir sobre qué EI actuar."],
+        sondeo:["¿Qué te confirma que volviste al contexto de tu sector?","¿Qué harías con esta comparación en tu trabajo real?"]
       }
-    },
-    variantes: {
-      A:"Sesión A — EI marcada Pending update",
-      B:"Sesión B — Actualización autónoma",
-      C:"Sesión C — Comparación sector/global + actualización autónoma"
-    }
+    ]
   },
 
   KLD: {
     objetivo: "Supervisar las Evaluaciones de Impacto de todo el banco, monitorear las actualizaciones generadas automáticamente y mantener los registros y usuarios del sistema.",
     tareas: [
       ["P0","Revisar las estadísticas generales del banco","Comprende el estado global de las EIs y detecta áreas que requieren seguimiento."],
-      ["P0","Monitorear actualizaciones automáticas","Distingue EIs pendientes, completadas y vencidas y abre la evaluación relacionada."],
+      ["P0","Monitorear actualizaciones automáticas","Distingue EIs pendientes, completadas y vencidas y abre la evaluación relacionada.", true],
       ["P0","Editar una EI existente","Modifica información válida y confirma que el cambio quedó guardado y registrado."],
       ["P0","Crear una nueva EI","Registra una EI con los datos mínimos y evita duplicados."],
       ["P1","Filtrar estadísticas y Tracker EI","Reduce el alcance por sector, división, país, estado, año u otros filtros disponibles."],
@@ -444,7 +437,6 @@ const GUION = {
       ["Informativa","Interpretar métricas, gráficos y estados","Utiliza la información para decidir dónde intervenir."]
     ],
     happyPaths: [
-      ["Monitorear actualizaciones automáticas","Dashboard global → revisar indicadores de actualización → abrir listado de actualizaciones → distinguir pendientes y completadas → abrir la EI relacionada → revisar su estado."],
       ["Editar una EI","Tracker EI → localizar EI → detalle → editar → validar → guardar → confirmación → histórico actualizado."],
       ["Crear una EI","Dashboard o Tracker EI → nueva EI → completar datos mínimos → revisar posible duplicado → confirmar creación → detalle de la nueva EI."],
       ["Gestionar usuarios","Navegación → gestión de usuarios → buscar usuario → crear o editar → confirmar rol y permisos."]
@@ -463,34 +455,29 @@ const GUION = {
       observar:["Uso de filtros y Tracker EI.","Comprensión del estado.","Acceso a detalle e histórico.","Claridad de acciones disponibles."],
       sondeo:[]
     },
-    criticas: {
-      A: {
-        nombre:"Tarea crítica A — monitorear actualizaciones automáticas", duracion:"13 min", prioridad:"P0",
-        contexto:"Necesitas comprobar qué EIs han sido marcadas automáticamente para actualización y conocer su progreso.",
-        tarea:"Localiza las actualizaciones, distingue cuáles están pendientes y cuáles se han completado, y abre una EI pendiente para revisar su situación.",
-        observar:["Descubrimiento del listado o indicador de actualizaciones.","Comprensión de que el proceso se generó automáticamente.","Identificación del Reviewer o responsable.","Acceso a actualizaciones pendientes y completadas.","Distinción entre pendiente, completada y vencida."],
-        sondeo:[]
-      },
-      B: {
-        nombre:"Tarea crítica B — editar una EI", duracion:"13 min", prioridad:"P0",
+    criticas: [
+      {
+        nombre:"Editar una EI existente", duracion:"10 min", prioridad:"P0",
         contexto:"Detectaste que el estado y la división responsable de una EI son incorrectos.",
         tarea:"Corrige la información y comprueba que el cambio quedó registrado.",
         observar:["Descubrimiento de edición.","Validación de datos.","Guardado y confirmación.","Descarte de cambios si intenta salir.","Histórico actualizado."],
         sondeo:[]
       },
-      C: {
-        nombre:"Tarea crítica C — crear una EI (o gestionar usuarios)", duracion:"13 min", prioridad:"P0",
+      {
+        nombre:"Crear una nueva EI", duracion:"10 min", prioridad:"P0",
         contexto:"Necesitas registrar una EI que todavía no aparece en la plataforma.",
-        tarea:"Crea la evaluación con la información disponible y revisa qué ocurriría si existiera una posible duplicada. Si la sesión lo permite, continúa con la gestión de usuarios (P2): busca un usuario, edítalo y confirma su rol y permisos.",
-        observar:["Descubrimiento de “Nueva EI”.","Comprensión de campos obligatorios.","Carga cognitiva del formulario.","Prevención de duplicados.","Confirmación y acceso al nuevo detalle.","(P2) Localización de la gestión de usuarios y comprensión de roles y permisos."],
+        tarea:"Crea la evaluación con la información disponible y revisa qué ocurriría si existiera una posible duplicada.",
+        observar:["Descubrimiento de “Nueva EI”.","Comprensión de campos obligatorios.","Carga cognitiva del formulario.","Prevención de duplicados.","Confirmación y acceso al nuevo detalle."],
         sondeo:[]
       }
-    },
-    variantes: {
-      A:"Sesión A — Monitorear actualizaciones automáticas",
-      B:"Sesión B — Editar EI",
-      C:"Sesión C — Crear EI o gestionar usuarios"
-    }
+    ],
+    ocultas: [
+      {
+        nombre:"Monitorear actualizaciones automáticas", motivo:"Oculta por ahora a petición del equipo.",
+        contexto:"Necesitas comprobar qué EIs han sido marcadas automáticamente para actualización y conocer su progreso.",
+        tarea:"Localiza las actualizaciones, distingue cuáles están pendientes y cuáles se han completado, y abre una EI pendiente para revisar su situación."
+      }
+    ]
   },
 
   Consultant: {
@@ -525,48 +512,52 @@ const GUION = {
       observar:["Uso de filtros y Tracker EI.","Comprensión del detalle.","Ausencia de expectativas de edición.","Capacidad de volver sin perder filtros."],
       sondeo:[]
     },
-    criticas: {
-      A: {
-        nombre:"Tarea crítica — reportar una nueva EI", duracion:"13 min", prioridad:"P0",
+    criticas: [
+      {
+        nombre:"Reportar una nueva EI", duracion:"10 min", prioridad:"P0",
         contexto:"Conoces una Evaluación de Impacto que no aparece en la plataforma y necesitas reportarla.",
         tarea:"Inicia el reporte, completa la información disponible y envíalo.",
         observar:["Descubrimiento de la acción “Reportar nueva EI”.","Diferencia entre reportar una nueva EI y editar una existente.","Comprensión de campos obligatorios.","Manejo de una posible duplicada.","Confirmación y expectativas sobre el siguiente paso."],
         sondeo:["¿Qué esperas que ocurra con la evaluación después de reportarla?"]
       },
-      B: {
-        nombre:"Tarea crítica — reportar una nueva EI", duracion:"13 min", prioridad:"P0",
-        contexto:"Conoces una Evaluación de Impacto que no aparece en la plataforma y necesitas reportarla.",
-        tarea:"Inicia el reporte, completa la información disponible y envíalo.",
-        observar:["Descubrimiento de la acción “Reportar nueva EI”.","Diferencia entre reportar una nueva EI y editar una existente.","Comprensión de campos obligatorios.","Manejo de una posible duplicada.","Confirmación y expectativas sobre el siguiente paso."],
-        sondeo:["¿Qué esperas que ocurra con la evaluación después de reportarla?"]
-      },
-      C: {
-        nombre:"Tarea crítica C — consulta, filtros, histórico y recuperación sin resultados", duracion:"13 min", prioridad:"P1",
-        contexto:"Estás explorando las EIs de un sector y país concretos. En algún momento la combinación de filtros que aplicas no devuelve ningún resultado.",
-        tarea:"Explora las estadísticas, filtra hasta encontrar una EI, revisa su detalle e histórico y, cuando no obtengas resultados, recupera la búsqueda hasta volver a ver información útil.",
-        observar:["Comprensión de qué filtros están activos.","Reacción ante el estado sin resultados y claridad del mensaje.","Capacidad de limpiar o ajustar filtros sin perder orientación.","Comprensión del histórico y de la información de detalle.","Expectativas sobre exportar información (P2)."],
-        sondeo:["¿Qué te dice la pantalla cuando no hay resultados?","¿Qué harías para volver a ver información útil?"]
+      {
+        nombre:"Filtrar y valorar si los filtros le bastan", duracion:"8 min", prioridad:"P1",
+        contexto:"Quieres revisar las EIs que te interesan de un sector y país concretos.",
+        tarea:"Filtra hasta dejar en pantalla solo las EIs que te interesan y cuéntame si los filtros disponibles te sirven o se te quedan cortos.",
+        observar:["Si encuentra los filtros y sabe combinarlos sin ayuda.","Comprensión de qué filtros están activos en cada momento.","Capacidad de ajustar o limpiar filtros sin perder orientación.","Qué criterio querría filtrar y no puede — el hueco es el dato.","Si echa en falta guardar, reutilizar o compartir una combinación de filtros."],
+        sondeo:["¿Con qué criterio te habría gustado filtrar y no has encontrado?","¿Estos filtros te bastan para tu trabajo real o se te quedan cortos?"]
       }
-    },
-    variantes: {
-      A:"Sesión A — Consultar EI + reportar nueva",
-      B:"Sesión B — Consultar EI + reportar nueva",
-      C:"Sesión C — Consulta, filtros, histórico y recuperación sin resultados"
-    }
+    ]
   }
 };
 
 const PREFIJO_ROL = { Reviewer:"REV", KLD:"KLD", Consultant:"CON" };
 
-function bloquesDeSesion(rol, variante) {
+function bloquesDeSesion(rol) {
   const g = GUION[rol];
   if (!g) return [];
-  const crit = g.criticas[variante] || g.criticas.A;
   return [
     { bloque:"Orientación", ...g.orientacion },
     { bloque:"Navegación común", ...g.navegacion },
-    { bloque:"Tarea crítica", ...crit }
+    ...g.criticas.map((c) => ({ bloque:"Tarea crítica", ...c }))
   ];
+}
+
+/* Minutos que declara un bloque ("10 min" -> 10). */
+const minutosDe = (b) => Number(String((b && b.duracion) || "").match(/\d+/) || [0]) || 0;
+
+/* Estructura de la sesión para un rol concreto: los tiempos dependen de
+   cuántas tareas críticas tenga el rol, así que se calculan, no se fijan. */
+function estructuraDe(rol) {
+  const g = GUION[rol];
+  const filas = [
+    ["Apertura", 3, "Contexto, consentimiento y pregunta inicial."],
+    ["Orientación", minutosDe(g.orientacion), "Comprender la página de inicio y las prioridades."],
+    ["Navegación común", minutosDe(g.navegacion), "Filtrar, localizar y abrir una EI."],
+    ...g.criticas.map((c) => ["Tarea crítica · " + c.nombre, minutosDe(c), c.tarea]),
+    ["Cierre", 5, "Evaluación y preguntas finales."]
+  ];
+  return { filas, total: filas.reduce((a, f) => a + f[1], 0) };
 }
 /* ===================== Conexión directa con Airtable (API REST) =====================
    Esta versión NO depende de Cowork. Cada persona pega su propio token de Airtable
@@ -738,7 +729,7 @@ const ids = () => undefined; // ya no se filtran fieldIds al listar: la API REST
 
 /* ===================== Estado ===================== */
 const state = { sessions: [], tareas: [], hallazgos: [], insights: [], conectado: false, tab: "registrar" };
-const ui = { pasoAbierto: "apertura", masDetalle: {}, sesionAbierta: null, chuleta: false };
+const ui = { pasoAbierto: "apertura", masDetalle: {}, sesionAbierta: null, chuleta: false, guionRol: "Reviewer" };
 const timers = {};
 
 const ahoraHora = () => new Date().toTimeString().slice(0, 5);
@@ -749,7 +740,7 @@ const nuevoDraft = () => ({
   idSesion: "",
   ficha: {
     fecha: new Date().toISOString().slice(0, 10), hora: ahoraHora(), rol: "Reviewer",
-    participante: "", critica: "A", consentimiento: "Sí", grabacion: "", incidencias: ""
+    participante: "", consentimiento: "Sí", grabacion: "", incidencias: ""
   },
   respInicial: "",
   tareas: [],
@@ -767,18 +758,29 @@ const nuevaFila = (b) => ({
   primerClic: "", errores: "", bloqueo: "", ayuda: "", expectativa: "", interpreto: "", cita: "",
   observacion: "", observados: [], _ref: b
 });
+
+/* Tarea añadida sobre la marcha por quien modera. No viene del guion:
+   el nombre y la consigna los escribe la persona facilitadora. */
+const nuevaFilaExtra = () => ({
+  ...nuevaFila({ bloque: "Tarea adicional", nombre: "", prioridad: "P1",
+                 contexto: "", tarea: "", observar: [], sondeo: [], duracion: "5 min" }),
+  extra: true, consigna: ""
+});
 const nuevoHallazgo = (n) => ({ codigo: "H-" + String(n).padStart(2, "0"), tarea: "", hallazgo: "", evidencia: "", impacto: "", severidad: "Media", recomendacion: "" });
 const nuevoInsight = (n) => ({ codigo: "I-" + String(n).padStart(2, "0"), necesidad: "", motivacion: "", barrera: "", consecuencia: "", confianza: "Media", tema: "" });
 
+/* Reconstruye la lista de tareas a partir del guion del rol activo.
+   El emparejamiento es por nombre, no por posición, porque cada rol tiene
+   un número distinto de tareas críticas. Las tareas añadidas a mano se
+   conservan siempre y van al final. */
 function sincronizarTareas() {
-  const bs = bloquesDeSesion(draft.ficha.rol, draft.ficha.critica);
-  const prev = draft.tareas;
-  draft.tareas = bs.map((bl, i) => {
-    const p = prev[i];
-    if (p && p.bloque === bl.bloque && p.tarea === bl.nombre) return { ...p, prioridad: bl.prioridad, _ref: bl };
-    if (p && p.bloque === bl.bloque) return { ...p, tarea: bl.nombre, prioridad: bl.prioridad, observados: [], _ref: bl };
-    return nuevaFila(bl);
+  const prev = draft.tareas || [];
+  const extras = prev.filter((t) => t.extra);
+  const base = bloquesDeSesion(draft.ficha.rol).map((bl) => {
+    const p = prev.find((t) => !t.extra && t.bloque === bl.bloque && t.tarea === bl.nombre);
+    return p ? { ...p, prioridad: bl.prioridad, _ref: bl } : nuevaFila(bl);
   });
+  draft.tareas = [...base, ...extras];
 }
 
 function guardarBorrador() { try { localStorage.setItem("ei-draft-v2", JSON.stringify(draft)); } catch (e) {} }
@@ -847,18 +849,26 @@ setInterval(() => {
 }, 1000);
 
 /* ===================== Formulario guiado ===================== */
-const PASOS = [
-  { id: "apertura", n: 1, tit: "Apertura", min: 3 },
-  { id: "t0", n: 2, tit: "Orientación", min: 4 },
-  { id: "t1", n: 3, tit: "Navegación común", min: 5 },
-  { id: "t2", n: 4, tit: "Tarea crítica", min: 13 },
-  { id: "cierre", n: 5, tit: "Cierre", min: 5 },
-  { id: "despues", n: 6, tit: "Después de la sesión", min: 0 }
-];
+/* Los pasos ya no son fijos: dependen de cuántas tareas críticas tenga el
+   rol y de cuántas se hayan añadido a mano. El índice va en el id (t0, t1,
+   … t12), así que hay que leerlo con slice(1) y no con [1]. */
+function pasos() {
+  const tareas = draft.tareas.map((t, i) => ({
+    id: "t" + i,
+    tit: t.extra ? (t.tarea.trim() || "Tarea adicional") : t.tarea,
+    min: minutosDe(t._ref)
+  }));
+  return [
+    { id: "apertura", tit: "Apertura", min: 3 },
+    ...tareas,
+    { id: "cierre", tit: "Cierre", min: 5 },
+    { id: "despues", tit: "Después de la sesión", min: 0 }
+  ].map((p, i) => ({ ...p, n: i + 1 }));
+}
 
 function pasoHecho(p) {
   if (p.id === "apertura") return !!draft.respInicial.trim();
-  if (p.id.startsWith("t")) { const t = draft.tareas[Number(p.id[1])]; return !!(t && t.resultado); }
+  if (p.id.startsWith("t")) { const t = draft.tareas[Number(p.id.slice(1))]; return !!(t && t.resultado); }
   if (p.id === "cierre") return !!(draft.metricas.facilidad || draft.cierre.confuso.trim() || draft.cierre.cambio.trim());
   if (p.id === "despues") return !!(draft.sintesis.resultado.trim() || draft.hallazgos.length);
   return false;
@@ -891,14 +901,25 @@ function htmlPasoTarea(idx) {
   if (!t) return `<p class="mini">Elige el rol para cargar esta tarea.</p>`;
   const r = t._ref || {};
   const abierto = !!ui.masDetalle["t" + idx];
+  const cabecera = t.extra
+    ? `<div class="blk">
+        <div class="item-head"><span class="ix">Tarea adicional</span>
+          <button class="btn sm danger" data-act="del-tarea" data-i="${idx}">Quitar</button></div>
+        <div class="grid2">
+          ${campo("¿Qué tarea es?", `tareas.${idx}.tarea`, "text", { ph: "ej. Exportar el listado filtrado" })}
+          ${campo("Prioridad", `tareas.${idx}.prioridad`, "select", { options: PRIORIDAD_OPCIONES })}
+        </div>
+        ${campo("Qué le pediste", `tareas.${idx}.consigna`, "textarea", { rows: 2, ph: "La consigna que le leíste en voz alta" })}
+      </div>`
+    : `<div class="leer">
+        <span class="lbl">Lee esto en voz alta</span>
+        <p class="q">«${esc(r.contexto || "")}»</p>
+        <p class="q">«${esc(r.tarea || "")}»</p>
+      </div>`;
   return `${htmlCrono("t" + idx)}
-  <div class="leer">
-    <span class="lbl">Lee esto en voz alta</span>
-    <p class="q">«${esc(r.contexto || "")}»</p>
-    <p class="q">«${esc(r.tarea || "")}»</p>
-  </div>
+  ${cabecera}
   <div class="obs-list">
-    <span class="lbl">Marca lo que veas · ${esc(t.prioridad)} · ${esc(r.duracion || "")}</span>
+    <span class="lbl">${t.extra ? "Anota lo que veas" : "Marca lo que veas"} · ${esc(t.prioridad)}${r.duracion ? " · " + esc(r.duracion) : ""}</span>
     ${(r.observar || []).map((o, j) => `<label class="chk ${t.observados && t.observados[j] ? "on" : ""}">
       <input type="checkbox" data-obs="${idx}.${j}" ${t.observados && t.observados[j] ? "checked" : ""}>
       <span>${esc(o)}</span></label>`).join("")}
@@ -937,7 +958,7 @@ function htmlHallazgos() {
       <button class="btn sm danger" data-act="del-hallazgo" data-i="${i}">Quitar</button></div>
     ${campo("Qué ocurrió", `hallazgos.${i}.hallazgo`, "textarea", { rows: 2 })}
     <div class="grid2">
-      ${campo("En qué tarea", `hallazgos.${i}.tarea`, "select", { options: ["", ...draft.tareas.map((t) => t.tarea)] })}
+      ${campo("En qué tarea", `hallazgos.${i}.tarea`, "select", { options: ["", ...draft.tareas.map((t) => t.tarea).filter(Boolean)] })}
       <label class="f"><span class="l">Severidad</span>
         <div class="opts" style="margin:0">${SEVERIDADES.map((s) => `<button class="opt ${h.severidad === s ? "on" : ""}" data-act="set-sev" data-i="${i}" data-v="${s}">${s}</button>`).join("")}</div>
       </label>
@@ -989,10 +1010,15 @@ function htmlCuerpoPaso(p) {
       <button class="btn primary" data-act="siguiente" data-paso="apertura">Siguiente: Orientación →</button></div>`;
   }
   if (p.id.startsWith("t")) {
-    const i = Number(p.id[1]);
-    const sig = PASOS[PASOS.findIndex((x) => x.id === p.id) + 1];
+    const i = Number(p.id.slice(1));
+    const ps = pasos();
+    const sig = ps[ps.findIndex((x) => x.id === p.id) + 1];
+    const t = draft.tareas[i];
+    const criticas = draft.tareas.filter((x) => x.bloque === "Tarea crítica").length;
+    const nCrit = draft.tareas.slice(0, i + 1).filter((x) => x.bloque === "Tarea crítica").length;
+    const nota = t && t.bloque === "Tarea crítica" ? `Tarea crítica ${nCrit} de ${criticas}.` : "";
     return `${htmlPasoTarea(i)}
-    <div class="paso-next"><span class="mini">${i === 2 ? "Es la única tarea P0 de la sesión." : ""}</span>
+    <div class="paso-next"><span class="mini">${esc(nota)}</span>
       <button class="btn primary" data-act="siguiente" data-paso="${p.id}">Siguiente: ${esc(sig.tit)} →</button></div>`;
   }
   if (p.id === "cierre") {
@@ -1058,7 +1084,7 @@ function htmlCuerpoPaso(p) {
 function renderPasos() {
   const cont = document.getElementById("pasos");
   if (!cont) return;
-  cont.innerHTML = PASOS.map((p) => {
+  cont.innerHTML = pasos().map((p) => {
     const abierto = ui.pasoAbierto === p.id;
     return `<div class="paso ${abierto ? "open" : ""} ${pasoHecho(p) ? "done" : ""}">
       ${htmlCabeceraPaso(p)}
@@ -1071,8 +1097,7 @@ function renderRegistrar() {
   const g = GUION[draft.ficha.rol];
   const editando = !!draft.recId;
   const idPrevisto = editando ? draft.idSesion : siguienteId(draft.ficha.rol);
-  const criticas = ["A", "B", "C"].map((k) => [k, g.criticas[k]])
-    .filter(([k, c], i, arr) => c && arr.findIndex(([, x]) => x.nombre === c.nombre) === i);
+  const est = estructuraDe(draft.ficha.rol);
   document.getElementById("v-registrar").innerHTML = `
   <div class="card">
     <div class="card-head">
@@ -1084,12 +1109,20 @@ function renderRegistrar() {
       ${campo("Rol que evalúa", "ficha.rol", "select", { options: ROLES })}
       ${campo("Fecha", "ficha.fecha", "date")}
     </div>
-    <label class="f"><span class="l">¿Qué tarea crítica vas a probar? (una sola por sesión)</span></label>
-    <div class="opts">${criticas.map(([k, c]) => `<button class="opt ${draft.ficha.critica === k ? "on" : ""}" data-act="set-critica" data-v="${k}">${esc(c.nombre.replace(/^Tarea crítica [A-C] — /, "").replace(/^Tarea crítica — /, ""))}</button>`).join("")}</div>
+    <label class="f"><span class="l">Tareas críticas que se evalúan en esta sesión</span></label>
+    <div class="opts">${g.criticas.map((c) => `<span class="opt on">${esc(c.nombre)}</span>`).join("")}</div>
+    <p class="mini">Se evalúan todas, una detrás de otra. Duración estimada del guion: <b>${est.total} min</b>${est.total > 30 ? " — por encima de los 30 min de referencia" : ""}.</p>
     <p class="mini">${esc(g.objetivo)}</p>
   </div>
 
   <div id="pasos"></div>
+
+  <div class="card">
+    <div class="row-actions" style="justify-content:space-between">
+      <span class="mini">¿Probaste algo que no estaba en el guion? Añádelo como una tarea más.</span>
+      <button class="btn sm" data-act="add-tarea">+ Añadir tarea</button>
+    </div>
+  </div>
 
   <div class="card" style="position:sticky;bottom:8px">
     <div class="row-actions" style="justify-content:space-between">
@@ -1106,7 +1139,7 @@ function renderRegistrar() {
 function fichaFields(idSesion) {
   const f = draft.ficha, m = metricasCalculadas(draft.tareas), mm = draft.metricas, c = draft.cierre, s = draft.sintesis;
   const num = (v) => (v === "" || v === null || v === undefined ? undefined : Number(v));
-  const crit = (GUION[f.rol].criticas[f.critica] || {}).nombre || "";
+  const crit = draft.tareas.filter((t) => t.bloque === "Tarea crítica" && t.tarea).map((t) => t.tarea).join(" · ");
   const o = {};
   o[F.ses.id] = idSesion;
   o[F.ses.fecha] = f.fecha || undefined;
@@ -1114,7 +1147,8 @@ function fichaFields(idSesion) {
   o[F.ses.rol] = f.rol;
   o[F.ses.participante] = f.participante;
   o[F.ses.modalidad] = "Remota";
-  o[F.ses.variante] = f.critica;
+  /* El campo "Variante" (single select A/B/C) ya no aplica: desde ahora cada
+     sesión evalúa todas las tareas críticas del rol, no una de tres. */
   o[F.ses.varianteTxt] = crit;
   o[F.ses.consentimiento] = f.consentimiento;
   if (f.grabacion) o[F.ses.grabacion] = f.grabacion;
@@ -1151,7 +1185,11 @@ async function guardarSesion() {
 
     const tareas = draft.tareas.filter((t) => t.tarea).map((t) => {
       const marcados = ((t._ref && t._ref.observar) || []).filter((_, j) => t.observados && t.observados[j]);
-      const obs = (marcados.length ? "Observado: " + marcados.join(" · ") + (t.observacion ? "\n" : "") : "") + (t.observacion || "");
+      const obs = [
+        t.extra && t.consigna ? "Consigna: " + t.consigna : "",
+        marcados.length ? "Observado: " + marcados.join(" · ") : "",
+        t.observacion || ""
+      ].filter(Boolean).join("\n");
       const o = {};
       o[F.tar.registro] = `${idSesion} · ${t.tarea}`;
       o[F.tar.sesion] = [recId]; o[F.tar.idSesion] = idSesion; o[F.tar.rol] = f.rol;
@@ -1270,7 +1308,7 @@ function renderSesiones() {
     let cuerpo = "";
     if (abierta) {
       cuerpo = `<div class="sess-body">
-        <p class="mini" style="margin-top:10px"><b>Tarea crítica probada:</b> ${esc(val(s, F.ses.varianteTxt) || "—")}
+        <p class="mini" style="margin-top:10px"><b>Tareas críticas evaluadas:</b> ${esc(val(s, F.ses.varianteTxt) || "—")}
           · <b>Grabación:</b> ${esc(val(s, F.ses.consentimiento))}${val(s, F.ses.grabacion) ? ` · <a href="${esc(val(s, F.ses.grabacion))}" target="_blank" rel="noopener">enlace</a>` : ""}</p>
         ${val(s, F.ses.respInicial) ? `<p class="mini"><b>Pregunta inicial:</b> ${esc(val(s, F.ses.respInicial))}</p>` : ""}
         <div class="stats">
@@ -1452,36 +1490,49 @@ function renderMatriz() {
 }
 
 /* ===================== Vista: Guion ===================== */
-function renderGuion() {
-  document.getElementById("v-guion").innerHTML = `
-  <div class="card">
-    <div class="card-head"><h3>Estructura de la sesión</h3><span class="eyebrow">Máximo 30 minutos</span></div>
-    <div class="tbl-wrap"><table><thead><tr><th>Momento</th><th>Tiempo</th><th>Contenido</th></tr></thead>
-      <tbody>${ESTRUCTURA.map(([a, b, c]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td>${esc(c)}</td></tr>`).join("")}</tbody></table></div>
-    <p class="mini" style="margin-top:9px"><b>Regla de alcance:</b> cada participante hace orientación, navegación por Tracker EI y detalle, y un único happy path P0.</p>
-  </div>
-  ${ROLES.map((rol) => {
-    const g = GUION[rol];
-    const cr = ["A", "B", "C"].map((v) => g.criticas[v]).filter((b, i, a) => b && a.findIndex((x) => x.nombre === b.nombre) === i);
-    return `<div class="card">
-      <div class="card-head"><h3>${rol}${g.principal ? " · perfil principal" : ""}</h3></div>
-      <p class="mini">${esc(g.objetivo)}</p>
-      <div class="sect">Tareas y prioridades</div>
-      <div class="tbl-wrap"><table><thead><tr><th style="width:90px">Prioridad</th><th>Tarea</th><th>Resultado esperado</th></tr></thead>
-        <tbody>${g.tareas.map(([p, t, r]) => `<tr><td><span class="pill ${esc(p)}">${esc(p)}</span></td><td><b>${esc(t)}</b></td><td>${esc(r)}</td></tr>`).join("")}</tbody></table></div>
-      <div class="sect">Happy paths</div>
-      ${g.happyPaths.map(([n, p]) => `<div class="hp"><span class="n">${esc(n)}</span><span class="p">${esc(p)}</span></div>`).join("")}
-      <div class="sect">Guion</div>
-      ${[g.orientacion, g.navegacion, ...cr].map((b) => `<div class="blk">
-        <div class="blk-head"><span class="pill ${esc(b.prioridad)}">${esc(b.prioridad)}</span>
-          <span class="name">${esc(b.nombre)}</span><span class="dur">${esc(b.duracion)}</span></div>
-        <div class="script"><p><b>Contexto:</b> <span class="q">«${esc(b.contexto)}»</span></p>
+function htmlGuionRol(rol) {
+  const g = GUION[rol];
+  const est = estructuraDe(rol);
+  return `<div class="card">
+    <div class="card-head"><h3>${rol}${g.principal ? " · perfil principal" : ""}</h3>
+      <span class="eyebrow">${est.total} min estimados</span></div>
+    <p class="mini">${esc(g.objetivo)}</p>
+    <div class="sect">Estructura de la sesión</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Momento</th><th style="width:70px">Tiempo</th><th>Contenido</th></tr></thead>
+      <tbody>${est.filas.map(([a, m, c]) => `<tr><td><b>${esc(a)}</b></td><td>${m} min</td><td>${esc(c)}</td></tr>`).join("")}
+        <tr><td><b>Total</b></td><td><b>${est.total} min</b></td><td class="mini">Sin contar tareas añadidas sobre la marcha.</td></tr></tbody></table></div>
+    <p class="mini" style="margin-top:9px"><b>Regla de alcance:</b> cada participante hace apertura, orientación, navegación común y <b>todas</b> las tareas críticas de su rol. Si sobra tiempo, puedes añadir tareas extra desde el formulario.</p>
+    <div class="sect">Tareas y prioridades</div>
+    <div class="tbl-wrap"><table><thead><tr><th style="width:90px">Prioridad</th><th>Tarea</th><th>Resultado esperado</th></tr></thead>
+      <tbody>${g.tareas.map(([p, t, r, oculta]) => `<tr${oculta ? ' class="fila-oculta"' : ""}><td><span class="pill ${esc(p)}">${esc(p)}</span></td><td><b>${esc(t)}</b>${oculta ? ' <span class="pill oculta">Oculta</span>' : ""}</td><td>${esc(r)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="sect">Happy paths</div>
+    ${g.happyPaths.map(([n, p]) => `<div class="hp"><span class="n">${esc(n)}</span><span class="p">${esc(p)}</span></div>`).join("")}
+    <div class="sect">Guion</div>
+    ${[g.orientacion, g.navegacion, ...g.criticas].map((b) => `<div class="blk">
+      <div class="blk-head"><span class="pill ${esc(b.prioridad)}">${esc(b.prioridad)}</span>
+        <span class="name">${esc(b.nombre)}</span><span class="dur">${esc(b.duracion)}</span></div>
+      <div class="script"><p><b>Contexto:</b> <span class="q">«${esc(b.contexto)}»</span></p>
+        <p><b>Tarea:</b> <span class="q">«${esc(b.tarea)}»</span></p>
+        <p><b>Observar:</b></p><ul>${b.observar.map((o) => `<li>${esc(o)}</li>`).join("")}</ul>
+        ${b.sondeo.length ? `<p style="margin-top:6px"><b>Sondeo:</b> ${b.sondeo.map((s) => `<span class="q">«${esc(s)}»</span>`).join(" · ")}</p>` : ""}
+      </div></div>`).join("")}
+    ${(g.ocultas || []).length ? `<div class="sect">Fuera de alcance por ahora</div>
+      ${g.ocultas.map((b) => `<div class="blk oculto">
+        <div class="blk-head"><span class="pill oculta">Oculta</span><span class="name">${esc(b.nombre)}</span></div>
+        <div class="script"><p class="mini">${esc(b.motivo)} El guion se conserva aquí para poder reactivarla sin rehacerla.</p>
+          <p><b>Contexto:</b> <span class="q">«${esc(b.contexto)}»</span></p>
           <p><b>Tarea:</b> <span class="q">«${esc(b.tarea)}»</span></p>
-          <p><b>Observar:</b></p><ul>${b.observar.map((o) => `<li>${esc(o)}</li>`).join("")}</ul>
-          ${b.sondeo.length ? `<p style="margin-top:6px"><b>Sondeo:</b> ${b.sondeo.map((s) => `<span class="q">«${esc(s)}»</span>`).join(" · ")}</p>` : ""}
-        </div></div>`).join("")}
-    </div>`;
-  }).join("")}
+        </div></div>`).join("")}` : ""}
+  </div>`;
+}
+
+function renderGuion() {
+  const rol = ui.guionRol || ROLES[0];
+  document.getElementById("v-guion").innerHTML = `
+  <div class="tabs" style="margin-bottom:14px">
+    ${ROLES.map((r) => `<button class="tab ${r === rol ? "active" : ""}" data-act="guion-rol" data-v="${esc(r)}">${esc(r)}</button>`).join("")}
+  </div>
+  ${htmlGuionRol(rol)}
   <div class="card">
     <div class="card-head"><h3>Matriz general de permisos</h3></div>
     <div class="tbl-wrap"><table><thead><tr><th>Tarea</th><th>KLD</th><th>Reviewer</th><th>Consultant</th></tr></thead>
@@ -1570,7 +1621,9 @@ document.addEventListener("change", (e) => {
 });
 
 document.addEventListener("click", async (e) => {
-  const tab = e.target.closest(".tab");
+  /* Solo las pestañas de navegación principal llevan data-tab. Las pestañas
+     por rol del guion reutilizan el estilo .tab pero se gestionan más abajo. */
+  const tab = e.target.closest(".tab[data-tab]");
   if (tab) { irA(tab.dataset.tab); return; }
   const b = e.target.closest("[data-act]");
   if (!b) return;
@@ -1578,9 +1631,10 @@ document.addEventListener("click", async (e) => {
 
   if (a === "toggle-paso") { ui.pasoAbierto = ui.pasoAbierto === b.dataset.paso ? null : b.dataset.paso; renderPasos(); }
   else if (a === "siguiente") {
-    const i = PASOS.findIndex((p) => p.id === b.dataset.paso);
+    const ps = pasos();
+    const i = ps.findIndex((p) => p.id === b.dataset.paso);
     const act = timers[b.dataset.paso]; if (act && act.desde) { act.ms += Date.now() - act.desde; act.desde = null; }
-    ui.pasoAbierto = PASOS[Math.min(i + 1, PASOS.length - 1)].id;
+    ui.pasoAbierto = ps[Math.min(i + 1, ps.length - 1)].id;
     renderPasos();
     const el = document.querySelector(".paso.open"); if (el) try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (err) {}
   }
@@ -1592,7 +1646,20 @@ document.addEventListener("click", async (e) => {
   else if (a === "set-num") { draft.metricas[b.dataset.k] = b.dataset.v; guardarBorrador(); renderPasos(); }
   else if (a === "set-sev") { draft.hallazgos[Number(b.dataset.i)].severidad = b.dataset.v; guardarBorrador(); renderPasos(); }
   else if (a === "set-conf") { draft.insights[Number(b.dataset.i)].confianza = b.dataset.v; guardarBorrador(); renderPasos(); }
-  else if (a === "set-critica") { draft.ficha.critica = b.dataset.v; sincronizarTareas(); guardarBorrador(); renderRegistrar(); }
+  else if (a === "guion-rol") { ui.guionRol = b.dataset.v; renderGuion(); try { window.scrollTo(0, 0); } catch (err) {} }
+  else if (a === "add-tarea") {
+    draft.tareas.push(nuevaFilaExtra());
+    guardarBorrador();
+    ui.pasoAbierto = "t" + (draft.tareas.length - 1);
+    renderRegistrar();
+    const el = document.querySelector(".paso.open"); if (el) try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (err) {}
+  }
+  else if (a === "del-tarea") {
+    draft.tareas.splice(Number(b.dataset.i), 1);
+    guardarBorrador();
+    ui.pasoAbierto = null;
+    renderRegistrar();
+  }
   else if (a === "add-hallazgo") { draft.hallazgos.push(nuevoHallazgo(draft.hallazgos.length + 1)); guardarBorrador(); renderPasos(); }
   else if (a === "del-hallazgo") { draft.hallazgos.splice(Number(b.dataset.i), 1); guardarBorrador(); renderPasos(); }
   else if (a === "add-insight") { draft.insights.push(nuevoInsight(draft.insights.length + 1)); guardarBorrador(); renderPasos(); }
@@ -1653,19 +1720,21 @@ function cargarEnFormulario(recId) {
   draft.childIds = { tar: tar.map((r) => r.id), hal: hal.map((r) => r.id), ins: ins.map((r) => r.id) };
   draft.ficha = {
     fecha: val(s, F.ses.fecha) || "", hora: val(s, F.ses.hora), rol: val(s, F.ses.rol) || "Reviewer",
-    participante: val(s, F.ses.participante), critica: val(s, F.ses.variante) || "A",
+    participante: val(s, F.ses.participante),
     consentimiento: val(s, F.ses.consentimiento) || "Sí", grabacion: val(s, F.ses.grabacion),
     incidencias: val(s, F.ses.incidencias)
   };
   draft.respInicial = val(s, F.ses.respInicial);
   sincronizarTareas();
-  const refs = bloquesDeSesion(draft.ficha.rol, draft.ficha.critica);
+  const refs = bloquesDeSesion(draft.ficha.rol);
   if (tar.length) {
     draft.tareas = tar.map((t) => {
       const nombre = val(t, F.tar.tarea);
       const ref = refs.find((r) => r.nombre === nombre);
+      const bloque = val(t, F.tar.bloque) || "Tarea adicional";
       return {
-        bloque: val(t, F.tar.bloque) || "Tarea adicional", tarea: nombre, prioridad: val(t, F.tar.prioridad) || "P1",
+        extra: !ref, consigna: "",
+        bloque, tarea: nombre, prioridad: val(t, F.tar.prioridad) || "P1",
         resultado: val(t, F.tar.resultado), tiempo: val(t, F.tar.tiempo), ruta: val(t, F.tar.ruta),
         primerClic: val(t, F.tar.primerClic), errores: val(t, F.tar.errores), bloqueo: val(t, F.tar.bloqueo),
         ayuda: val(t, F.tar.ayuda), expectativa: val(t, F.tar.expectativa), interpreto: val(t, F.tar.interpreto),
