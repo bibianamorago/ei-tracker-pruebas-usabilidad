@@ -1431,7 +1431,7 @@ function renderChuleta() {
 /* ===================== Exportación ===================== */
 function mostrarCSV(titulo, csv) {
   const host = document.getElementById("modal-host");
-  host.innerHTML = `<div class="overlay" data-act="cerrar-modal"><div class="modal" style="max-width:640px" onclick="event.stopPropagation()">
+  host.innerHTML = `<div class="overlay" data-act="cerrar-modal"><div class="modal" style="max-width:640px">
     <p><b>${esc(titulo)}</b> — copia el contenido o descárgalo.</p>
     <textarea rows="12" style="font-family:'IBM Plex Mono',monospace;font-size:11px">${esc(csv)}</textarea>
     <div class="row-actions"><button class="btn sm" data-act="cerrar-modal">Cerrar</button>
@@ -1611,7 +1611,12 @@ document.addEventListener("click", async (e) => {
   else if (a === "editar-sesion") { cargarEnFormulario(b.dataset.rec); irA("registrar"); }
   else if (a === "borrar-sesion") { confirmarBorrado(b.dataset.rec); }
   else if (a === "confirmar-borrado") { await borrarSesion(b.dataset.rec); }
-  else if (a === "cerrar-modal") { document.getElementById("modal-host").innerHTML = ""; }
+  else if (a === "cerrar-modal") {
+    // Cierra al pulsar un botón Cancelar/Cerrar (el propio target lleva el data-act)
+    // o al pulsar el fondo (el overlay es el target directo), pero no al hacer
+    // clic dentro del contenido del modal.
+    if (e.target === b) document.getElementById("modal-host").innerHTML = "";
+  }
   else if (a === "chuleta") { ui.chuleta = !ui.chuleta; renderChuleta(); }
   else if (a === "reintentar") {
     document.getElementById("conn").innerHTML = `<span class="spin"></span><span class="grow">Reintentando…</span>`;
@@ -1707,7 +1712,7 @@ function cargarEnFormulario(recId) {
 function confirmarBorrado(recId) {
   const s = state.sessions.find((x) => x.id === recId);
   document.getElementById("modal-host").innerHTML = `<div class="overlay" data-act="cerrar-modal">
-    <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal">
       <p>¿Eliminar la sesión <b>${esc(val(s, F.ses.id))}</b> con sus tareas, hallazgos e insights? También se borra en Airtable.</p>
       <div class="row-actions"><button class="btn sm" data-act="cerrar-modal">Cancelar</button>
         <button class="btn sm primary" style="background:var(--alta-dot);border-color:var(--alta-dot)" data-act="confirmar-borrado" data-rec="${recId}">Eliminar</button>
