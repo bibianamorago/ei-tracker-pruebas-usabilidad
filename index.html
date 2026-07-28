@@ -1161,7 +1161,20 @@ const filtros = { rol: "Todos", severidad: "Todas", q: "" };
 
 function renderSintesis() {
   const el = document.getElementById("v-sintesis");
-  if (!state.sessions.length) { el.innerHTML = `<div class="empty"><p><b>Sin datos todavía.</b></p><p>La síntesis se construye con las sesiones guardadas.</p></div>`; return; }
+  // Barra para publicar el snapshot en la vista de Resultados (resultados.html).
+  // Siempre visible cuando hay conexión, con o sin sesiones, para que se encuentre.
+  const barraSnapshot = state.conectado ? `<div class="card">
+    <div class="row-actions" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="mini">Publica los resultados (solo agregados) en la <b>vista de Resultados</b> para negocio y producto, sin que necesiten token.</span>
+      <button class="btn sm primary" data-act="export-snapshot">Exportar snapshot para negocio</button>
+    </div>
+  </div>` : "";
+
+  if (!state.sessions.length) {
+    el.innerHTML = barraSnapshot + `<div class="empty"><p><b>Sin datos todavía.</b></p>
+      <p>La síntesis se construye con las sesiones guardadas. En cuanto guardes la primera, aquí podrás publicar los resultados con el botón de arriba.</p></div>`;
+    return;
+  }
   const porRol = {}; ROLES.forEach((r) => porRol[r] = state.sessions.filter((s) => val(s, F.ses.rol) === r).length);
   const p0 = state.tareas.filter((t) => val(t, F.tar.prioridad) === "P0" && val(t, F.tar.resultado));
   const p0ok = p0.filter((t) => val(t, F.tar.resultado) === "Éxito sin ayuda").length;
@@ -1202,12 +1215,7 @@ function renderSintesis() {
     <div class="stat"><span class="n">${state.insights.length}</span><span class="l">Insights</span></div>
     <div class="stat"><span class="n">${facProm}</span><span class="l">Facilidad media</span></div>
   </div>
-  <div class="card">
-    <div class="row-actions" style="justify-content:space-between;align-items:center">
-      <span class="mini">Publica estos resultados (solo agregados) para negocio y producto, sin que necesiten token.</span>
-      <button class="btn sm" data-act="export-snapshot">Exportar snapshot para negocio</button>
-    </div>
-  </div>
+  ${barraSnapshot}
   <div class="card">
     <div class="card-head"><h3>Distribución por rol</h3><span class="eyebrow">Reviewer es el perfil principal</span></div>
     ${ROLES.map((r) => `<div class="bar-row"><span>${r}</span>
@@ -1563,6 +1571,7 @@ document.addEventListener("click", async (e) => {
   }
   else if (a === "export-snapshot") {
     if (!state.conectado) { toast("Conéctate con tu token antes de generar el snapshot", true); return; }
+    if (!state.sessions.length) { toast("Aún no hay sesiones que publicar", true); return; }
     const ok = descargarArchivo("datos.json", JSON.stringify(construirSnapshot(), null, 2), "application/json");
     toast(ok ? "datos.json descargado · súbelo al repositorio para publicarlo" : "La descarga está bloqueada por el navegador", !ok);
   }
