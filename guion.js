@@ -22,7 +22,7 @@ const PERMISOS = [
   ["Actualizar una EI sin estado Pending update", "Sí", "Sí, dentro de su ámbito", "No"],
   ["Editar una EI existente", "Sí", "Sí, dentro de su ámbito", "No"],
   ["Crear una EI", "Sí", "No definido para este estudio", "No"],
-  ["Reportar una nueva EI", "No es su flujo principal", "No definido para este estudio", "Sí"],
+  ["Reportar una nueva EI", "No es su flujo principal", "No definido para este estudio", "No · fuera de alcance"],
   ["Gestionar usuarios", "Sí", "No", "No"]
 ];
 const PRIORIDADES = [
@@ -38,12 +38,12 @@ const DATOS_PRUEBA = [
   "Una EI del sector con información desactualizada, sin estado Pending update.",
   "Una EI completada con histórico y publicaciones.",
   "Datos suficientes para que los filtros de sector y país devuelvan resultados distintos.",
-  "Datos válidos para reportar o crear una nueva EI.",
-  "Una posible EI duplicada para comprobar prevención de errores."
+  "Datos válidos para crear una nueva EI (flujo de KLD).",
+  "Una posible EI duplicada para comprobar prevención de errores (KLD).",
+  "Una tabla de EIs con columnas configurables, para que el Consultant pueda ajustar la vista."
 ];
 const RIESGOS = [
-  "El Consultant puede reportar una nueva EI, pero no puede editar una EI existente. La pantalla de edición ubicada en su sección de Figma no debe interpretarse como un permiso del rol.",
-  "Debe definirse qué sucede después de que el Consultant reporta una EI: creación inmediata, revisión previa o asignación a un responsable.",
+  "El Consultant es solo de consulta: no reporta, no crea ni edita EIs. El diseño no debe mostrarle acciones de reportar, crear o editar, y la pantalla de edición de su sección de Figma no debe interpretarse como un permiso del rol.",
   "Debe confirmarse si el Reviewer puede crear o autoreportar nuevas EIs. Esta tarea no se incluye en su alcance actual hasta recibir definición.",
   "Debe confirmarse el permiso de exportación para Reviewer y Consultant.",
   "Las etiquetas deben diferenciar claramente “Crear EI”, “Reportar nueva EI”, “Editar EI” y “Pending update”.",
@@ -171,52 +171,36 @@ const GUION = {
   },
 
   Consultant: {
-    objetivo: "Consultar las Evaluaciones de Impacto, explorar información mediante filtros y reportar una nueva evaluación cuando no existe en el sistema.",
+    objetivo: "Consultar las Evaluaciones de Impacto y explorar la información: navegar el listado completo, ajustar la tabla a lo que necesita ver y valorar si la información disponible le resulta útil y relevante. Este perfil no tiene tareas críticas: observamos navegación y utilidad de la información, no un happy path.",
     tareas: [
-      ["P0","Encontrar y consultar una EI","Localiza una evaluación, abre el detalle y obtiene la información necesaria."],
-      ["P0","Reportar una nueva EI","Registra una nueva evaluación mediante el flujo de reporte y recibe confirmación."],
-      ["P1","Explorar estadísticas generales","Comprende volumen, estados, sectores, divisiones y evolución de las EIs."],
-      ["P1","Aplicar y limpiar filtros","Ajusta el alcance del dashboard y Tracker sin perder orientación."],
+      ["P1","Explorar el listado completo de EIs","Recorre la tabla de evaluaciones y entiende qué información ofrece de un vistazo."],
+      ["P1","Personalizar la tabla / columnas","Edita la vista para mostrar la información que necesita cuando la que aparece por defecto no basta."],
+      ["P1","Encontrar y consultar una EI","Localiza una evaluación, abre el detalle y obtiene la información necesaria."],
+      ["P1","Aplicar y limpiar filtros","Ajusta el alcance del listado sin perder orientación."],
       ["P1","Revisar detalle e histórico","Consulta estado, división, país, última actualización, metodología, publicaciones y cambios previos."],
-      ["P2","Exportar información","Descarga información cuando su permiso y el alcance del producto lo permitan."],
-      ["Informativa","Interpretar estados e indicadores","Comprende la situación de las EIs sin asumir responsabilidades de actualización."],
+      ["Informativa","Valorar utilidad y relevancia de la información","Comprende la situación de las EIs y juzga si lo que ve le sirve para su trabajo."],
+      ["Restringida","Reportar o crear una EI","Fuera de alcance de este estudio: el Consultant ya no reporta ni crea evaluaciones."],
       ["Restringida","Editar una EI existente","La acción no está disponible."],
       ["Restringida","Completar actualizaciones pendientes","La acción no está disponible."],
       ["Restringida","Gestionar usuarios","La acción no está disponible."]
     ],
     happyPaths: [
-      ["Consultar una EI","Dashboard → aplicar filtros → Tracker EI → localizar EI → abrir detalle → revisar histórico → volver al listado conservando el contexto."],
-      ["Reportar una nueva EI","Dashboard o Tracker EI → reportar nueva EI → completar datos requeridos → revisar posible duplicado → enviar reporte → confirmación."]
+      ["Consultar y ajustar la vista","Dashboard → Tracker EI → recorrer el listado → editar la tabla/columnas para ver la información necesaria → aplicar filtros → abrir una EI → revisar detalle e histórico → volver conservando el contexto."]
     ],
     orientacion: {
       nombre:"Orientación — Consultant", duracion:"4 min", prioridad:"P1",
       contexto:"Acabas de entrar a EI Tracker y quieres entender la situación general de las Evaluaciones de Impacto.",
-      tarea:"Revisa la pantalla y cuéntame qué información te resulta más útil.",
-      observar:["Comprensión de indicadores y estados.","Identificación de filtros.","Expectativas sobre las acciones disponibles.","Comprensión del alcance de consulta."],
+      tarea:"Revisa la pantalla y cuéntame qué información te resulta más útil y qué esperarías poder hacer aquí.",
+      observar:["Comprensión de indicadores y estados.","Identificación de filtros y de la tabla de EIs.","Expectativas sobre las acciones disponibles.","Comprensión del alcance de consulta."],
       sondeo:[]
     },
     navegacion: {
-      nombre:"Navegación común — Consultant", duracion:"5 min", prioridad:"P0",
-      contexto:"Necesitas consultar una EI de un sector y país específicos.",
-      tarea:"Aplica los filtros que consideres necesarios, encuentra la EI y revisa su detalle e histórico.",
-      observar:["Uso de filtros y Tracker EI.","Comprensión del detalle.","Ausencia de expectativas de edición.","Capacidad de volver sin perder filtros."],
-      sondeo:[]
+      nombre:"Navegación y utilidad de la información — Consultant", duracion:"12 min", prioridad:"P1",
+      contexto:"Estás en la vista con todas las Evaluaciones de Impacto.",
+      tarea:"Recorre el listado. Si la información que ves no te basta, edita la tabla para mostrar las columnas o los datos que necesitas. Usa los filtros que quieras, abre una EI que te interese y revisa su detalle. Ve contándome en voz alta si la información te resulta útil, suficiente y relevante.",
+      observar:["Cómo recorre el listado y qué mira primero.","Si descubre cómo editar la tabla o elegir columnas, y con qué facilidad.","Qué columnas o datos añade o quita — lo que echa en falta es el dato.","Uso de filtros y comprensión de cuáles están activos; si sabe limpiarlos.","Comprensión del detalle e histórico de una EI.","Si la información visible le resulta útil y relevante, o se le queda corta.","Ausencia de expectativas de editar, reportar o crear EIs."],
+      sondeo:["¿La información que ves de un vistazo te basta, o te falta algo?","¿Qué columna o dato te habría gustado ver y no encontraste?","¿Esta vista te sirve para tu trabajo real o se te queda corta?"]
     },
-    criticas: [
-      {
-        nombre:"Reportar una nueva EI", duracion:"10 min", prioridad:"P0",
-        contexto:"Conoces una Evaluación de Impacto que no aparece en la plataforma y necesitas reportarla.",
-        tarea:"Inicia el reporte, completa la información disponible y envíalo.",
-        observar:["Descubrimiento de la acción “Reportar nueva EI”.","Diferencia entre reportar una nueva EI y editar una existente.","Comprensión de campos obligatorios.","Manejo de una posible duplicada.","Confirmación y expectativas sobre el siguiente paso."],
-        sondeo:["¿Qué esperas que ocurra con la evaluación después de reportarla?"]
-      },
-      {
-        nombre:"Filtrar y valorar si los filtros le bastan", duracion:"8 min", prioridad:"P1",
-        contexto:"Quieres revisar las EIs que te interesan de un sector y país concretos.",
-        tarea:"Filtra hasta dejar en pantalla solo las EIs que te interesan y cuéntame si los filtros disponibles te sirven o se te quedan cortos.",
-        observar:["Si encuentra los filtros y sabe combinarlos sin ayuda.","Comprensión de qué filtros están activos en cada momento.","Capacidad de ajustar o limpiar filtros sin perder orientación.","Qué criterio querría filtrar y no puede — el hueco es el dato.","Si echa en falta guardar, reutilizar o compartir una combinación de filtros."],
-        sondeo:["¿Con qué criterio te habría gustado filtrar y no has encontrado?","¿Estos filtros te bastan para tu trabajo real o se te quedan cortos?"]
-      }
-    ]
+    criticas: []
   }
 };

@@ -911,9 +911,11 @@ function renderRegistrar() {
       ${campo("Rol que evalúa", "ficha.rol", "select", { options: ROLES })}
       ${campo("Fecha", "ficha.fecha", "date")}
     </div>
-    <label class="f"><span class="l">Tareas críticas que se evalúan en esta sesión</span></label>
+    ${g.criticas.length ? `<label class="f"><span class="l">Tareas críticas que se evalúan en esta sesión</span></label>
     <div class="opts">${g.criticas.map((c) => `<span class="opt on">${esc(c.nombre)}</span>`).join("")}</div>
-    <p class="mini">Se evalúan todas, una detrás de otra. Duración estimada del guion: <b>${est.total} min</b>${est.total > 30 ? " — por encima de los 30 min de referencia" : ""}.</p>
+    <p class="mini">Se evalúan todas, una detrás de otra. Duración estimada del guion: <b>${est.total} min</b>${est.total > 30 ? " — por encima de los 30 min de referencia" : ""}.</p>`
+    : `<label class="f"><span class="l">Sin tareas críticas</span></label>
+    <p class="mini">Este perfil no tiene tareas críticas: observamos navegación y utilidad de la información. Duración estimada del guion: <b>${est.total} min</b>.</p>`}
     <p class="mini">${esc(g.objetivo)}</p>
   </div>
 
@@ -1358,7 +1360,7 @@ function htmlGuionRol(rol) {
     <div class="tbl-wrap"><table><thead><tr><th>Momento</th><th style="width:70px">Tiempo</th><th>Contenido</th></tr></thead>
       <tbody>${est.filas.map(([a, m, c]) => `<tr><td><b>${esc(a)}</b></td><td>${m} min</td><td>${esc(c)}</td></tr>`).join("")}
         <tr><td><b>Total</b></td><td><b>${est.total} min</b></td><td class="mini">Sin contar tareas añadidas sobre la marcha.</td></tr></tbody></table></div>
-    <p class="mini" style="margin-top:9px"><b>Regla de alcance:</b> cada participante hace apertura, orientación, navegación común y <b>todas</b> las tareas críticas de su rol. Si sobra tiempo, puedes añadir tareas extra desde el formulario.</p>
+    <p class="mini" style="margin-top:9px"><b>Regla de alcance:</b> cada participante hace apertura, orientación, navegación común y ${g.criticas.length ? "<b>todas</b> las tareas críticas de su rol" : "—este perfil no tiene tareas críticas—"}. Si sobra tiempo, puedes añadir tareas extra desde el formulario.</p>
     <div class="sect">Tareas y prioridades</div>
     <div class="tbl-wrap"><table><thead><tr><th style="width:90px">Prioridad</th><th>Tarea</th><th>Resultado esperado</th></tr></thead>
       <tbody>${g.tareas.map(([p, t, r, oculta]) => `<tr${oculta ? ' class="fila-oculta"' : ""}><td><span class="pill ${esc(p)}">${esc(p)}</span></td><td><b>${esc(t)}</b>${oculta ? ' <span class="pill oculta">Oculta</span>' : ""}</td><td>${esc(r)}</td></tr>`).join("")}</tbody></table></div>
